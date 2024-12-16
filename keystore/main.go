@@ -20,11 +20,7 @@ import (
 )
 
 func main() {
-	pwd, _ := os.Getwd()
-	logger.InfoBB("pwd:", pwd)
-
-	err := godotenv.Load(".env")
-	if err != nil {
+	if err := godotenv.Load(".env"); err != nil {
 		log.Fatalf("Error loading .env file: %v", err)
 	}
 
@@ -33,16 +29,6 @@ func main() {
 
 	logger.InfoBB("password:", password)
 	logger.InfoBB("rpcURL:", rpcURL)
-
-	client, err := ethclient.Dial(rpcURL)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	rpcClient, err := rpc.Dial(rpcURL)
-	if err != nil {
-		log.Fatal(err)
-	}
 
 	files, err := os.ReadDir("./keystore")
 	if err != nil || len(files) == 0 {
@@ -55,13 +41,19 @@ func main() {
 		log.Fatal(err)
 	}
 
-	key, err := keystore.DecryptKey(keystoreJSON, password)
+	privateKey, err := keystore.DecryptKey(keystoreJSON, password)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	fromAddress := key.Address
+	fromAddress := privateKey.Address
 	toAddress := common.HexToAddress("0x00a3819199113fc6a6e6ba1298afde7377e2009b")
+
+	client, err := ethclient.Dial(rpcURL)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	nonce, err := client.PendingNonceAt(context.Background(), fromAddress)
 	if err != nil {
 		log.Fatal(err)
@@ -73,6 +65,11 @@ func main() {
 	}
 
 	var chainIDHex string
+	rpcClient, err := rpc.Dial(rpcURL)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	err = rpcClient.CallContext(context.Background(), &chainIDHex, "eth_chainId")
 	if err != nil {
 		log.Fatalf("Failed to fetch chain ID: %v", err)
@@ -131,7 +128,7 @@ func main() {
 	logger.InfoBW("gasLimit:  ", gasLimit)
 	logger.InfoBW("gasLimit:  ", tx.Hash().Hex())
 
-	signedTx, err := types.SignTx(tx, types.LatestSignerForChainID(chainID), key.PrivateKey)
+	signedTx, err := types.SignTx(tx, types.LatestSignerForChainID(chainID), privateKey.PrivateKey)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -298,17 +295,17 @@ func showKeystore() {
 		log.Fatal(err)
 	}
 
-	key, err := keystore.DecryptKey(keystoreJSON, password)
+	privateKey, err := keystore.DecryptKey(keystoreJSON, password)
 	if err != nil {
 		log.Fatal("Failed to unlock the keystore: ", err)
 	}
 
-	pk := crypto.FromECDSA(key.PrivateKey)
+	pk := crypto.FromECDSA(privateKey.PrivateKey)
 	hash := base.Hash{}
 	hash.SetBytes(pk)
 	pks := hash.Hex()
 	pks = pks[:10] + "..." + pks[len(pks)-10:]
-	fmt.Printf("Address: %s\nPrivate Key: %s\n", key.Address.Hex(), hash.Hex())
+	fmt.Printf("Address: %s\nPrivate Key: %s\n", privateKey.Address.Hex(), hash.Hex())
 }
 
 func getBalanceAt(address common.Address) *big.Int {
@@ -348,7 +345,7 @@ func sendTransaction() {
 		log.Fatal(err)
 	}
 
-	key, err := keystore.DecryptKey(keystoreJSON, password)
+	privateKey, err := keystore.DecryptKey(keystoreJSON, password)
 	if err != nil {
 		log.Fatal("Failed to unlock the keystore: ", err)
 	}
@@ -358,7 +355,7 @@ func sendTransaction() {
 		log.Fatal("Failed to connect to Ethereum node: ", err)
 	}
 
-	fromAddress := key.Address
+	fromAddress := privateKey.Address
 	toAddress := common.HexToAddress(toAddressStr)
 
 	nonce, err := client.PendingNonceAt(context.Background(), fromAddress)
@@ -414,7 +411,7 @@ func sendTransaction() {
 		log.Fatal("Failed to get network ID: ", err)
 	}
 
-	signedTx, err := types.SignTx(tx, types.NewEIP155Signer(chainID), key.PrivateKey)
+	signedTx, err := types.SignTx(tx, types.NewEIP155Signer(chainID), privateKey.PrivateKey)
 	if err != nil {
 		log.Fatal("Failed to sign transaction: ", err)
 	}
@@ -435,14 +432,14 @@ func sendTransaction() {
 	logger.InfoBY("filePath:", filePath)
 	logger.InfoBY("password:", strings.Repeat("*", len(password)))
 	// logger.InfoBY("keystoreJSON:", string(keystoreJSON))
-	logger.InfoBY("key.Id", key.Id)
-	logger.InfoBY("key.Address", key.Address)
-	pk := crypto.FromECDSA(key.PrivateKey)
+	logger.InfoBY("privateKey.Id", privateKey.Id)
+	logger.InfoBY("privateKey.Address", privateKey.Address)
+	pk := crypto.FromECDSA(privateKey.PrivateKey)
 	hash := base.Hash{}
 	hash.SetBytes(pk)
 	pks := hash.Hex()
 	pks = pks[:10] + "..." + pks[len(pks)-10:]
-	fmt.Printf("Address: %s\nPrivate Key: %s\n", key.Address.Hex(), pks)
+	fmt.Printf("Address: %s\nPrivate Key: %s\n", privateKey.Address.Hex(), pks)
 	bn, _ := client.BlockNumber(context.Background())
 	logger.InfoBY("client.BlockNumber:", bn)
 	p, _ := client.PeerCount(context.Background())

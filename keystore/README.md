@@ -4,9 +4,9 @@ This undocuemented and uncommented example is for internal use only.
 
 ## Warning
 
-Do not rely on it for any purpose implied or otherwise. The code in this folder is not audited, not secure, and not intended for any purpose. It is only present for historical reasons.
+Do not rely on this code for any purpose implied or otherwise. The code is not audited, not secure, and not intended for any purpose. It is present here only for historical reasons.
 
-By using this software for any reason, you are accepting all risks and liabilities and agree to hold TrueBlocks, LLC and any of its employees or contractors harmless for any and all damages that may result from its use.
+By using this software, you are accepting all risks and liabilities and agree to hold harmless TrueBlocks, LLC and any of its employees, contractors, or affiliates for any and all damages that may result from your use of this code.
 
 ## Further Warning
 
@@ -18,4 +18,4 @@ The use of this software falls under the license agreement found in the root dir
 
 ## Contributing
 
-No contributions will be accepted for the code in this folder. It is only present for historical reasons.
+No contributions will be accepted for the code in this folder.
