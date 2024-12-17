@@ -3,7 +3,7 @@ module github.com/TrueBlocks/trueblocks-core/examples/keystore
 go 1.23.1
 
 require (
-	github.com/TrueBlocks/trueblocks-core/src/apps/chifra v0.0.0-20241103193928-2a3d9f89af63
+	github.com/TrueBlocks/trueblocks-core/src/apps/chifra v0.0.0-20241217054115-e1dd1523c8dd
 	github.com/ethereum/go-ethereum v1.14.12
 	github.com/joho/godotenv v1.5.1
 )
@@ -30,7 +30,6 @@ require (
 	github.com/prometheus/client_golang v1.14.0 // indirect
 	github.com/prometheus/common v0.42.0 // indirect
 	github.com/prometheus/procfs v0.9.0 // indirect
-	github.com/rogpeppe/go-internal v1.11.0 // indirect
 	github.com/shirou/gopsutil v3.21.11+incompatible // indirect
 	github.com/supranational/blst v0.3.13 // indirect
 	github.com/tklauser/go-sysconf v0.3.12 // indirect

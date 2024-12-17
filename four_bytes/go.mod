@@ -4,7 +4,7 @@ module github.com/TrueBlocks/trueblocks-core/src/other/four_bytes
 go 1.23
 
 require (
-	github.com/TrueBlocks/trueblocks-core/src/apps/chifra v0.0.0-20241103193928-2a3d9f89af63
+	github.com/TrueBlocks/trueblocks-core/src/apps/chifra v0.0.0-20241217054115-e1dd1523c8dd
 	github.com/ethereum/go-ethereum v1.14.12
 	github.com/panjf2000/ants/v2 v2.10.0
 	github.com/spf13/cobra v1.7.0
@@ -15,7 +15,6 @@ require (
 	github.com/bykof/gostradamus v1.0.4 // indirect
 	github.com/crackcomm/go-gitignore v0.0.0-20170627025303-887ab5e44cc3 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.1.0 // indirect
-	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/holiman/uint256 v1.3.1 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/ipfs/boxo v0.8.0 // indirect
