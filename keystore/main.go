@@ -2,19 +2,12 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
-	"math/big"
-	"net/rpc"
 	"os"
-	"time"
 
-	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/file"
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/logger"
-	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/keystore"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/joho/godotenv"
 	/*
@@ -81,84 +74,84 @@ func main() {
 		log.Fatal(err)
 	}
 
-	var chainIDHex string
-	rpcClient, err := rpc.Dial(rpcURL)
-	if err != nil {
-		log.Fatal(err)
-	}
+	// var chainIDHex string
+	// rpcClient, err := rpc.Dial(rpcURL)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
 
-	err = rpcClient.CallContext(context.Background(), &chainIDHex, "eth_chainId")
-	if err != nil {
-		log.Fatalf("Failed to fetch chain ID: %v", err)
-	}
+	// err = rpcClient.CallContext(context.Background(), &chainIDHex, "eth_chainId")
+	// if err != nil {
+	// 	log.Fatalf("Failed to fetch chain ID: %v", err)
+	// }
 
-	chainID := new(big.Int)
-	_, ok := chainID.SetString(chainIDHex[2:], 16) // Remove "0x" and parse as hex
-	if !ok {
-		log.Fatal("Failed to parse chainID as big.Int")
-	}
+	// chainID := new(big.Int)
+	// _, ok := chainID.SetString(chainIDHex[2:], 16) // Remove "0x" and parse as hex
+	// if !ok {
+	// 	log.Fatal("Failed to parse chainID as big.Int")
+	// }
 
-	var gasTipCapHex string
-	err = rpcClient.CallContext(context.Background(), &gasTipCapHex, "eth_maxPriorityFeePerGas")
-	if err != nil {
-		log.Fatal(err)
-	}
+	// var gasTipCapHex string
+	// err = rpcClient.CallContext(context.Background(), &gasTipCapHex, "eth_maxPriorityFeePerGas")
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
 
-	gasTipCap := new(big.Int)
-	_, ok = gasTipCap.SetString(gasTipCapHex[2:], 16) // Remove "0x" and parse as hex
-	if !ok {
-		log.Fatal("Failed to parse gas tip cap as big.Int")
-	}
+	// gasTipCap := new(big.Int)
+	// _, ok = gasTipCap.SetString(gasTipCapHex[2:], 16) // Remove "0x" and parse as hex
+	// if !ok {
+	// 	log.Fatal("Failed to parse gas tip cap as big.Int")
+	// }
 
-	value := big.NewInt(1000)
+	// value := big.NewInt(1000)
 
-	gasFeeCap := new(big.Int).Add(baseFee, gasTipCap)
+	// gasFeeCap := new(big.Int).Add(baseFee, gasTipCap)
 
-	gasLimit, err := client.EstimateGas(context.Background(), ethereum.CallMsg{
-		From:  fromAddress,
-		To:    &toAddress,
-		Value: value,
-		Data:  nil,
-	})
-	if err != nil {
-		log.Fatal("Failed to estimate gas limit: ", err)
-	}
+	// gasLimit, err := client.EstimateGas(context.Background(), ethereum.CallMsg{
+	// 	From:  fromAddress,
+	// 	To:    &toAddress,
+	// 	Value: value,
+	// 	Data:  nil,
+	// })
+	// if err != nil {
+	// 	log.Fatal("Failed to estimate gas limit: ", err)
+	// }
 
-	tx := types.NewTx(&types.DynamicFeeTx{
-		ChainID:   chainID,
-		Nonce:     nonce,
-		GasFeeCap: gasFeeCap,
-		GasTipCap: gasTipCap,
-		Gas:       gasLimit,
-		To:        &toAddress,
-		Value:     value,
-		Data:      nil,
-	})
+	// tx := types.NewTx(&types.DynamicFeeTx{
+	// 	ChainID:   chainID,
+	// 	Nonce:     nonce,
+	// 	GasFeeCap: gasFeeCap,
+	// 	GasTipCap: gasTipCap,
+	// 	Gas:       gasLimit,
+	// 	To:        &toAddress,
+	// 	Value:     value,
+	// 	Data:      nil,
+	// })
 
-	logger.InfoBG("chainID:   ", chainID)
+	// logger.InfoBG("chainID:   ", chainID)
 	logger.InfoBG("nonce:     ", nonce)
 	logger.InfoBG("from:      ", fromAddress)
 	logger.InfoBG("to:        ", toAddress)
 	logger.InfoBW("baseFee:   ", baseFee)
-	logger.InfoBW("gasTipCap: ", gasTipCap)
-	logger.InfoBW("gasFeeCap: ", gasFeeCap)
-	logger.InfoBW("gasLimit:  ", gasLimit)
-	logger.InfoBW("gasLimit:  ", tx.Hash().Hex())
+	// logger.InfoBW("gasTipCap: ", gasTipCap)
+	// logger.InfoBW("gasFeeCap: ", gasFeeCap)
+	// logger.InfoBW("gasLimit:  ", gasLimit)
+	// logger.InfoBW("gasLimit:  ", tx.Hash().Hex())
 
-	signedTx, err := types.SignTx(tx, types.LatestSignerForChainID(chainID), privateKey.PrivateKey)
-	if err != nil {
-		log.Fatal(err)
-	}
+	// signedTx, err := types.SignTx(tx, types.LatestSignerForChainID(chainID), privateKey.PrivateKey)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
 
-	err = client.SendTransaction(context.Background(), signedTx)
-	if err != nil {
-		log.Fatal(err)
-	}
+	// err = client.SendTransaction(context.Background(), signedTx)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
 
-	now := time.Now()
-	msg := fmt.Sprintf("%s,%s,%s,%s\n", now.Format("2024-02-01|15:04:05.000"), fromAddress.Hex(), toAddress.Hex(), signedTx.Hash().Hex())
-	fmt.Print(msg)
-	file.AppendToAsciiFile("transactions.csv", msg)
+	// now := time.Now()
+	// msg := fmt.Sprintf("%s,%s,%s,%s\n", now.Format("2024-02-01|15:04:05.000"), fromAddress.Hex(), toAddress.Hex(), signedTx.Hash().Hex())
+	// fmt.Print(msg)
+	// file.AppendToAsciiFile("transactions.csv", msg)
 }
 
 /*
