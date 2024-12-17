@@ -1,7 +1,7 @@
 
 # NameManager CLI Tool
 
-`nameManager` is an example command-line tool built with the [TrueBlocks SDK](https://pkg.go.dev/github.com/TrueBlocks/trueblocks-sdk/v3) designed to manage name entries associated with addresses. It offers various operations such as adding, editing, deleting, cleaning, and pbulishing name entries in the names database.
+`nameManager` is an example command-line tool built with the [TrueBlocks SDK](https://pkg.go.dev/github.com/TrueBlocks/trueblocks-sdk) designed to manage name entries associated with addresses. It offers various operations such as adding, editing, deleting, cleaning, and pbulishing name entries in the names database.
 
 ## Building
 

@@ -12,7 +12,7 @@ import (
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/names"
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/types"
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/usage"
-	sdk "github.com/TrueBlocks/trueblocks-sdk/v3"
+	sdk "github.com/TrueBlocks/trueblocks-sdk/v4"
 )
 
 func main() {
