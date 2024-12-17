@@ -3,7 +3,7 @@ module github.com/TrueBlocks/trueblocks-core/examples/keystore
 go 1.23.1
 
 require (
-	github.com/TrueBlocks/trueblocks-core/src/apps/chifra v0.0.0-20241217054115-e1dd1523c8dd
+	github.com/TrueBlocks/trueblocks-core/src/apps/chifra v0.0.0-20241217061115-4a93860d585f
 	github.com/ethereum/go-ethereum v1.14.12
 	github.com/joho/godotenv v1.5.1
 )
