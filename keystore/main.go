@@ -1,11 +1,11 @@
 package main
 
 import (
-/*
 	"context"
 	"fmt"
 	"log"
 	"math/big"
+	"net/rpc"
 	"os"
 	"time"
 
@@ -16,13 +16,27 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
-	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/joho/godotenv"
-*/
-)
+	/*
+	   "context"
+	   "fmt"
+	   "log"
+	   "math/big"
+	   "os"
+	   "time"
+
+	   "github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/file"
+	   "github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/logger"
+	   "github.com/ethereum/go-ethereum"
+	   "github.com/ethereum/go-ethereum/accounts/keystore"
+	   "github.com/ethereum/go-ethereum/common"
+	   "github.com/ethereum/go-ethereum/core/types"
+	   "github.com/ethereum/go-ethereum/ethclient"
+	   "github.com/ethereum/go-ethereum/rpc"
+	   "github.com/joho/godotenv"
+	*/)
 
 func main() {
-/*
 	if err := godotenv.Load(".env"); err != nil {
 		log.Fatalf("Error loading .env file: %v", err)
 	}
@@ -145,7 +159,6 @@ func main() {
 	msg := fmt.Sprintf("%s,%s,%s,%s\n", now.Format("2024-02-01|15:04:05.000"), fromAddress.Hex(), toAddress.Hex(), signedTx.Hash().Hex())
 	fmt.Print(msg)
 	file.AppendToAsciiFile("transactions.csv", msg)
-*/
 }
 
 /*
