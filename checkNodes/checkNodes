@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+if [ $# -gt 0 ]; then
+  ./bin/checkNodes.1 "$@"
+else
+  echo -n -e "\r" "Starting up node monitor..."
+  echo -n -e "\r" "Starting up node monitor......"
+  echo -n -e "\r" "Starting up node monitor........."
+  watch -n 1 -c "echo '   ' | tr '\n' ' ' ; date | tr '\n' ' ' ; ./bin/checkNodes.1"
+fi

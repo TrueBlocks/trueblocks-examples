@@ -1,5 +1,5 @@
 all:
-	@echo "do nothing"
+	@echo "To build any of these examples, cd into the directory and type make."
 
 update:
-	@echo "do nothing"
+	@echo "To update any of these examples, cd into the directory and type make update."
