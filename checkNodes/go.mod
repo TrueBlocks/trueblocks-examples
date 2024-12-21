@@ -1,4 +1,4 @@
-module github.com/TrueBlocks/manage/checkNodes
+module github.com/TrueBlocks/trueblocks-core/examples/checkNodes
 
 go 1.23
 
