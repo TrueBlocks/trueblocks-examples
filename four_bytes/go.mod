@@ -5,7 +5,7 @@ go 1.23
 
 require (
 	github.com/TrueBlocks/trueblocks-core/src/apps/chifra v0.0.0-20250130023515-f86b9f89cfae
-	github.com/ethereum/go-ethereum v1.14.12
+	github.com/ethereum/go-ethereum v1.14.13
 	github.com/panjf2000/ants/v2 v2.10.0
 	github.com/spf13/cobra v1.7.0
 )
