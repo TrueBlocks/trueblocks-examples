@@ -1,8 +1,7 @@
 module github.com/TrueBlocks/trueblocks-core/examples/checkNodes
 
-go 1.23
-
-toolchain go1.23.1
+// Go Version
+go 1.23.1
 
 require (
 	github.com/TrueBlocks/trueblocks-core/src/apps/chifra v0.0.0-20250130023515-f86b9f89cfae
