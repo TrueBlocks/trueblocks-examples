@@ -1,6 +1,7 @@
 module github.com/TrueBlocks/trueblocks-core/examples/checkNodes
 
-go 1.23
+// Go Version
+go 1.23.1
 
 toolchain go1.23.1
 
