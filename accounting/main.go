@@ -17,7 +17,7 @@ type Posting struct {
 		TransactionIndex base.Txnum
 		LogIndex         base.Lognum
 		AssetAddress     string
-		AccountedFor     string
+		Holder           base.Address
 	}
 	CheckpointBalance int64
 	TentativeBalance  int64
@@ -40,7 +40,7 @@ func (p Posting) Reconciled(isFinal bool) string {
 
 type Reconciler struct {
 	mu                sync.Mutex
-	addressOfInterest string
+	addressOfInterest base.Address
 	runningBalances   map[string]int64
 	seenBlocks        map[string]base.Blknum
 	correctionCounter int
@@ -60,7 +60,7 @@ func (r *Reconciler) GetPostingChannel(block, tx int) <-chan Posting {
 	go func() {
 		defer close(ch)
 		for _, p := range logsByTx[mapKey(block, tx, 0)] {
-			if p.Statement.AccountedFor != r.addressOfInterest {
+			if p.Statement.Holder != r.addressOfInterest {
 				continue
 			}
 			eaKey := fmt.Sprintf("%d|%d|%d", block, tx, p.Statement.LogIndex)
@@ -72,7 +72,10 @@ func (r *Reconciler) GetPostingChannel(block, tx int) <-chan Posting {
 }
 
 func (r *Reconciler) flushBlock(buffer []Posting, modelChan chan<- Posting, wg *sync.WaitGroup) {
-	type key struct{ asset, holder string }
+	type key struct {
+		asset  string
+		holder base.Address
+	}
 	correctingEntry := func(k key, reason string, onChain, currentBal int64, p *Posting) Posting {
 		r.counterMu.Lock()
 		r.correctionCounter++
@@ -90,14 +93,14 @@ func (r *Reconciler) flushBlock(buffer []Posting, modelChan chan<- Posting, wg *
 		r.rowIndexCounter++
 		correction.RowIndex = r.rowIndexCounter
 		r.rowIndexMu.Unlock()
-		r.runningBalances[fmt.Sprintf("%s|%s", k.asset, k.holder)] = onChain
+		r.runningBalances[fmt.Sprintf("%s|%s", k.asset, k.holder.Hex())] = onChain
 		wg.Add(1)
 		return correction
 	}
 
 	lastPostings := make(map[key]int)
 	for i, p := range buffer {
-		k := key{p.Statement.AssetAddress, p.Statement.AccountedFor}
+		k := key{p.Statement.AssetAddress, p.Statement.Holder}
 		seenKey := fmt.Sprintf("%d|%s|%s", p.Statement.BlockNumber, k.asset, k.holder)
 
 		if _, seen := r.seenBlocks[seenKey]; !seen {
@@ -160,7 +163,7 @@ func (r *Reconciler) processStream(modelChan chan<- Posting, wg *sync.WaitGroup)
 					TransactionIndex base.Txnum
 					LogIndex         base.Lognum
 					AssetAddress     string
-					AccountedFor     string
+					Holder           base.Address
 				}{BlockNumber: base.Blknum(prevBlock), AssetAddress: EndOfBlockSentinel}}
 			}
 			for p := range r.GetPostingChannel(block, tx) {
@@ -174,7 +177,7 @@ func (r *Reconciler) processStream(modelChan chan<- Posting, wg *sync.WaitGroup)
 				TransactionIndex base.Txnum
 				LogIndex         base.Lognum
 				AssetAddress     string
-				AccountedFor     string
+				Holder           base.Address
 			}{BlockNumber: base.Blknum(prevBlock), AssetAddress: EndOfBlockSentinel}}
 		}
 		globalStream <- Posting{Statement: struct {
@@ -182,7 +185,7 @@ func (r *Reconciler) processStream(modelChan chan<- Posting, wg *sync.WaitGroup)
 			TransactionIndex base.Txnum
 			LogIndex         base.Lognum
 			AssetAddress     string
-			AccountedFor     string
+			Holder           base.Address
 		}{AssetAddress: EndOfStreamSentinel}}
 	}()
 
@@ -207,9 +210,6 @@ func shortenAddress(addr string) string {
 	if len(addr) == 42 {
 		return addr[:2] + addr[len(addr)-1:]
 	}
-	if len(addr) > 8 {
-		return addr[:8]
-	}
 	return addr
 }
 
@@ -218,7 +218,7 @@ func main() {
 	modelChan := make(chan Posting, 1000)
 	var wg sync.WaitGroup
 	r := &Reconciler{
-		addressOfInterest: "0xf",
+		addressOfInterest: base.HexToAddress("0xf"),
 		runningBalances:   make(map[string]int64),
 		seenBlocks:        make(map[string]base.Blknum),
 	}
@@ -273,7 +273,7 @@ func main() {
 		}
 
 		assetShort := shortenAddress(p.Statement.AssetAddress)
-		holderShort := shortenAddress(p.Statement.AccountedFor)
+		holderShort := shortenAddress(p.Statement.Holder.Hex())
 
 		checkpoint := "-"
 		if reconciled := p.Reconciled(isFinal); reconciled != "unknown" {

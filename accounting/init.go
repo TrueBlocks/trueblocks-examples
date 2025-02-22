@@ -54,7 +54,7 @@ func initData() {
 		p.Statement.TransactionIndex = base.Txnum(tx)
 		p.Statement.LogIndex = base.Lognum(log)
 		p.Statement.AssetAddress = strings.ToLower(record[3])
-		p.Statement.AccountedFor = strings.ToLower(record[4])
+		p.Statement.Holder = base.HexToAddress(record[4])
 		p.CheckpointBalance, _ = strconv.ParseInt(record[5], 10, 64)
 		key := mapKey(block, tx, 0)
 		logsByTx[key] = append(logsByTx[key], p)
@@ -65,7 +65,8 @@ func initData() {
 	mapReader := csv.NewReader(mapFile)
 	mapRecords, _ := mapReader.ReadAll()
 	for _, record := range mapRecords[1:] {
-		key := fmt.Sprintf("%s|%s|%s", record[0], record[1], record[2])
+		holder := base.HexToAddress(record[2])
+		key := fmt.Sprintf("%s|%s|%s", record[0], record[1], holder.Hex())
 		bal, _ := strconv.ParseInt(record[3], 10, 64)
 		mapping[key] = bal
 	}
