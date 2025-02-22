@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"strconv"
-	"strings"
 
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/base"
 )
@@ -53,7 +52,7 @@ func initData() {
 		p.Statement.BlockNumber = base.Blknum(block)
 		p.Statement.TransactionIndex = base.Txnum(tx)
 		p.Statement.LogIndex = base.Lognum(log)
-		p.Statement.AssetAddress = strings.ToLower(record[3])
+		p.Statement.AssetAddress = base.HexToAddress(record[3])
 		p.Statement.Holder = base.HexToAddress(record[4])
 		p.CheckpointBalance, _ = strconv.ParseInt(record[5], 10, 64)
 		key := mapKey(block, tx, 0)
@@ -65,8 +64,9 @@ func initData() {
 	mapReader := csv.NewReader(mapFile)
 	mapRecords, _ := mapReader.ReadAll()
 	for _, record := range mapRecords[1:] {
+		asset := base.HexToAddress(record[1])
 		holder := base.HexToAddress(record[2])
-		key := fmt.Sprintf("%s|%s|%s", record[0], record[1], holder.Hex())
+		key := fmt.Sprintf("%s|%s|%s", record[0], asset.Hex(), holder.Hex())
 		bal, _ := strconv.ParseInt(record[3], 10, 64)
 		mapping[key] = bal
 	}
