@@ -6,24 +6,26 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/base"
 )
 
 // Posting represents a single ledger event or correction
 type Posting struct {
 	Statement struct {
-		BlockNumber       int
-		TransactionIndex  int
-		LogIndex          int
-		AssetAddress      string
-		AccountedFor      string
-		CheckpointBalance int64
-		TentativeBalance  int64
+		BlockNumber      base.Blknum
+		TransactionIndex base.Txnum
+		LogIndex         base.Lognum
+		AssetAddress     string
+		AccountedFor     string
 	}
-	CorrectionIndex  int
-	CorrectionReason string
-	EventAmount      int64
-	BeginBalance     int64
-	RowIndex         int
+	CheckpointBalance int64
+	TentativeBalance  int64
+	CorrectionIndex   int
+	CorrectionReason  string
+	EventAmount       int64
+	BeginBalance      int64
+	RowIndex          int
 }
 
 func (p Posting) Reconciled(isFinal bool) string {
@@ -33,14 +35,14 @@ func (p Posting) Reconciled(isFinal bool) string {
 	if !isFinal {
 		return "unknown"
 	}
-	return strconv.FormatBool(p.BeginBalance+p.EventAmount == p.Statement.CheckpointBalance)
+	return strconv.FormatBool(p.BeginBalance+p.EventAmount == p.CheckpointBalance)
 }
 
 type Reconciler struct {
 	mu                sync.Mutex
 	addressOfInterest string
 	runningBalances   map[string]int64
-	seenBlocks        map[string]int
+	seenBlocks        map[string]base.Blknum
 	correctionCounter int
 	counterMu         sync.Mutex
 	rowIndexCounter   int
@@ -48,7 +50,9 @@ type Reconciler struct {
 }
 
 var (
-	apps [][2]int
+	apps                [][2]int
+	EndOfBlockSentinel  = string("0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef")
+	EndOfStreamSentinel = string("0xbeefdeadbeefdeadbeefdeadbeefdeadbeefdead")
 )
 
 func (r *Reconciler) GetPostingChannel(block, tx int) <-chan Posting {
@@ -80,8 +84,8 @@ func (r *Reconciler) flushBlock(buffer []Posting, modelChan chan<- Posting, wg *
 		}
 		r.counterMu.Unlock()
 		correction.Statement = p.Statement
-		correction.Statement.TentativeBalance = onChain
-		correction.Statement.CheckpointBalance = onChain
+		correction.TentativeBalance = onChain
+		correction.CheckpointBalance = onChain
 		r.rowIndexMu.Lock()
 		r.rowIndexCounter++
 		correction.RowIndex = r.rowIndexCounter
@@ -112,8 +116,8 @@ func (r *Reconciler) flushBlock(buffer []Posting, modelChan chan<- Posting, wg *
 		r.mu.Lock()
 		runningKey := fmt.Sprintf("%s|%s", k.asset, k.holder)
 		p.BeginBalance = r.runningBalances[runningKey]
-		p.Statement.TentativeBalance = p.BeginBalance + p.EventAmount
-		r.runningBalances[runningKey] = p.Statement.TentativeBalance
+		p.TentativeBalance = p.BeginBalance + p.EventAmount
+		r.runningBalances[runningKey] = p.TentativeBalance
 		r.rowIndexMu.Lock()
 		r.rowIndexCounter++
 		p.RowIndex = r.rowIndexCounter
@@ -152,14 +156,12 @@ func (r *Reconciler) processStream(modelChan chan<- Posting, wg *sync.WaitGroup)
 			block, tx := app[0], app[1]
 			if block != prevBlock && prevBlock != 0 {
 				globalStream <- Posting{Statement: struct {
-					BlockNumber       int
-					TransactionIndex  int
-					LogIndex          int
-					AssetAddress      string
-					AccountedFor      string
-					CheckpointBalance int64
-					TentativeBalance  int64
-				}{BlockNumber: prevBlock, AssetAddress: "END_OF_BLOCK"}}
+					BlockNumber      base.Blknum
+					TransactionIndex base.Txnum
+					LogIndex         base.Lognum
+					AssetAddress     string
+					AccountedFor     string
+				}{BlockNumber: base.Blknum(prevBlock), AssetAddress: EndOfBlockSentinel}}
 			}
 			for p := range r.GetPostingChannel(block, tx) {
 				globalStream <- p
@@ -168,33 +170,29 @@ func (r *Reconciler) processStream(modelChan chan<- Posting, wg *sync.WaitGroup)
 		}
 		if prevBlock != 0 {
 			globalStream <- Posting{Statement: struct {
-				BlockNumber       int
-				TransactionIndex  int
-				LogIndex          int
-				AssetAddress      string
-				AccountedFor      string
-				CheckpointBalance int64
-				TentativeBalance  int64
-			}{BlockNumber: prevBlock, AssetAddress: "END_OF_BLOCK"}}
+				BlockNumber      base.Blknum
+				TransactionIndex base.Txnum
+				LogIndex         base.Lognum
+				AssetAddress     string
+				AccountedFor     string
+			}{BlockNumber: base.Blknum(prevBlock), AssetAddress: EndOfBlockSentinel}}
 		}
 		globalStream <- Posting{Statement: struct {
-			BlockNumber       int
-			TransactionIndex  int
-			LogIndex          int
-			AssetAddress      string
-			AccountedFor      string
-			CheckpointBalance int64
-			TentativeBalance  int64
-		}{AssetAddress: "END_OF_STREAM"}}
+			BlockNumber      base.Blknum
+			TransactionIndex base.Txnum
+			LogIndex         base.Lognum
+			AssetAddress     string
+			AccountedFor     string
+		}{AssetAddress: EndOfStreamSentinel}}
 	}()
 
 	var buffer []Posting
 	for posting := range globalStream {
 		switch posting.Statement.AssetAddress {
-		case "END_OF_BLOCK":
+		case EndOfBlockSentinel:
 			r.flushBlock(buffer, modelChan, wg)
 			buffer = nil
-		case "END_OF_STREAM":
+		case EndOfStreamSentinel:
 			if len(buffer) > 0 {
 				r.flushBlock(buffer, modelChan, wg)
 			}
@@ -206,6 +204,9 @@ func (r *Reconciler) processStream(modelChan chan<- Posting, wg *sync.WaitGroup)
 }
 
 func shortenAddress(addr string) string {
+	if len(addr) == 42 {
+		return addr[:2] + addr[len(addr)-1:]
+	}
 	if len(addr) > 8 {
 		return addr[:8]
 	}
@@ -219,7 +220,7 @@ func main() {
 	r := &Reconciler{
 		addressOfInterest: "0xf",
 		runningBalances:   make(map[string]int64),
-		seenBlocks:        make(map[string]int),
+		seenBlocks:        make(map[string]base.Blknum),
 	}
 
 	done := make(chan struct{})
@@ -254,18 +255,18 @@ func main() {
 		if p.CorrectionIndex == 0 {
 			lastTx := 0
 			for _, app := range apps {
-				if app[0] == p.Statement.BlockNumber && app[1] > lastTx {
+				if base.Blknum(app[0]) == p.Statement.BlockNumber && app[1] > lastTx {
 					lastTx = app[1]
 				}
 			}
-			if p.Statement.TransactionIndex == lastTx {
+			if p.Statement.TransactionIndex == base.Txnum(lastTx) {
 				lastLog := 0
-				for _, logP := range logsByTx[mapKey(p.Statement.BlockNumber, lastTx, 0)] {
-					if logP.Statement.LogIndex > lastLog {
-						lastLog = logP.Statement.LogIndex
+				for _, logP := range logsByTx[mapKey(int(p.Statement.BlockNumber), lastTx, 0)] {
+					if logP.Statement.LogIndex > base.Lognum(lastLog) {
+						lastLog = int(logP.Statement.LogIndex)
 					}
 				}
-				if p.Statement.LogIndex == lastLog {
+				if p.Statement.LogIndex == base.Lognum(lastLog) {
 					isFinal = true
 				}
 			}
@@ -276,13 +277,13 @@ func main() {
 
 		checkpoint := "-"
 		if reconciled := p.Reconciled(isFinal); reconciled != "unknown" {
-			checkpoint = fmt.Sprintf("%d", p.Statement.CheckpointBalance)
+			checkpoint = fmt.Sprintf("%d", p.CheckpointBalance)
 		}
 
-		check1 := p.BeginBalance + p.EventAmount - p.Statement.TentativeBalance
+		check1 := p.BeginBalance + p.EventAmount - p.TentativeBalance
 		check2 := "-"
 		if p.CorrectionIndex != 0 || isFinal {
-			check2 = fmt.Sprintf("%d", p.BeginBalance+p.EventAmount-p.Statement.CheckpointBalance)
+			check2 = fmt.Sprintf("%d", p.BeginBalance+p.EventAmount-p.CheckpointBalance)
 		}
 
 		corrIndexStr := "-"
@@ -312,7 +313,7 @@ func main() {
 			holderShort,
 			p.BeginBalance,
 			p.EventAmount,
-			p.Statement.TentativeBalance,
+			p.TentativeBalance,
 			checkpoint,
 			check1,
 			check2,
@@ -320,7 +321,7 @@ func main() {
 		)
 
 		currentAsset = p.Statement.AssetAddress
-		lastTentative = p.Statement.TentativeBalance
+		lastTentative = p.TentativeBalance
 	}
 
 	if currentAsset != "" {
@@ -339,7 +340,7 @@ func main() {
 		lastPosting := postings[len(postings)-1]
 		fmt.Println(strings.Repeat("=", 120))
 		fmt.Printf("-\t-\t-\t-\t-\tTotal\t-\t0\t0\t%d\t-\t0\t-\t-\n",
-			lastPosting.Statement.TentativeBalance,
+			lastPosting.TentativeBalance,
 		)
 		fmt.Println()
 	}
