@@ -8,17 +8,12 @@ import (
 	"sync"
 
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/base"
+	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/types"
 )
 
 // Posting represents a single ledger event or correction
 type Posting struct {
-	Statement struct {
-		BlockNumber      base.Blknum
-		TransactionIndex base.Txnum
-		LogIndex         base.Lognum
-		AssetAddress     base.Address
-		Holder           base.Address
-	}
+	types.Statement
 	CheckpointBalance int64
 	TentativeBalance  int64
 	CorrectionIndex   int
@@ -158,13 +153,10 @@ func (r *Reconciler) processStream(modelChan chan<- Posting, wg *sync.WaitGroup)
 		for _, app := range apps {
 			block, tx := app[0], app[1]
 			if block != prevBlock && prevBlock != 0 {
-				globalStream <- Posting{Statement: struct {
-					BlockNumber      base.Blknum
-					TransactionIndex base.Txnum
-					LogIndex         base.Lognum
-					AssetAddress     base.Address
-					Holder           base.Address
-				}{BlockNumber: base.Blknum(prevBlock), AssetAddress: EndOfBlockSentinel}}
+				globalStream <- Posting{Statement: types.Statement{
+					BlockNumber:  base.Blknum(prevBlock),
+					AssetAddress: EndOfBlockSentinel,
+				}}
 			}
 			for p := range r.GetPostingChannel(block, tx) {
 				globalStream <- p
@@ -172,21 +164,14 @@ func (r *Reconciler) processStream(modelChan chan<- Posting, wg *sync.WaitGroup)
 			prevBlock = block
 		}
 		if prevBlock != 0 {
-			globalStream <- Posting{Statement: struct {
-				BlockNumber      base.Blknum
-				TransactionIndex base.Txnum
-				LogIndex         base.Lognum
-				AssetAddress     base.Address
-				Holder           base.Address
-			}{BlockNumber: base.Blknum(prevBlock), AssetAddress: EndOfBlockSentinel}}
+			globalStream <- Posting{Statement: types.Statement{
+				BlockNumber:  base.Blknum(prevBlock),
+				AssetAddress: EndOfBlockSentinel,
+			}}
 		}
-		globalStream <- Posting{Statement: struct {
-			BlockNumber      base.Blknum
-			TransactionIndex base.Txnum
-			LogIndex         base.Lognum
-			AssetAddress     base.Address
-			Holder           base.Address
-		}{AssetAddress: EndOfStreamSentinel}}
+		globalStream <- Posting{Statement: types.Statement{
+			AssetAddress: EndOfStreamSentinel,
+		}}
 	}()
 
 	var buffer []Posting
