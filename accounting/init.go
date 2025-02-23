@@ -10,14 +10,12 @@ import (
 )
 
 var (
-	eventAmounts map[string]int64
-	mapping      map[string]int64
-	logsByTx     map[int][]Posting
+	balanceMap map[string]int64
+	logsByTx   map[int][]Posting
 )
 
 func initData() {
-	eventAmounts = make(map[string]int64)
-	mapping = make(map[string]int64)
+	balanceMap = make(map[string]int64)
 	logsByTx = make(map[int][]Posting)
 
 	appsFile, _ := os.Open("tests/apps.csv")
@@ -28,16 +26,6 @@ func initData() {
 		block, _ := strconv.Atoi(record[0])
 		tx, _ := strconv.Atoi(record[1])
 		apps = append(apps, [2]int{block, tx})
-	}
-
-	eaFile, _ := os.Open("tests/eventAmounts.csv")
-	defer eaFile.Close()
-	eaReader := csv.NewReader(eaFile)
-	eaRecords, _ := eaReader.ReadAll()
-	for _, record := range eaRecords[1:] {
-		key := fmt.Sprintf("%s|%s|%s", record[0], record[1], record[2])
-		amount, _ := strconv.ParseInt(record[3], 10, 64)
-		eventAmounts[key] = amount
 	}
 
 	logsFile, _ := os.Open("tests/logs.csv")
@@ -55,6 +43,7 @@ func initData() {
 		p.Statement.AssetAddress = base.HexToAddress(record[3])
 		p.Statement.Holder = base.HexToAddress(record[4])
 		p.CheckpointBalance, _ = strconv.ParseInt(record[5], 10, 64)
+		p.EventAmount, _ = strconv.ParseInt(record[6], 10, 64)
 		key := mapKey(block, tx, 0)
 		logsByTx[key] = append(logsByTx[key], p)
 	}
@@ -68,6 +57,6 @@ func initData() {
 		holder := base.HexToAddress(record[2])
 		key := fmt.Sprintf("%s|%s|%s", record[0], asset.Hex(), holder.Hex())
 		bal, _ := strconv.ParseInt(record[3], 10, 64)
-		mapping[key] = bal
+		balanceMap[key] = bal
 	}
 }

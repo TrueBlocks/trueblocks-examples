@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	conn Connection
+	cc Connection
 )
 
 // Connection provides on-chain balance lookups
@@ -17,7 +17,7 @@ type Connection struct{}
 func (c *Connection) GetBalanceAtToken(asset base.Address, holder base.Address, hexBlockNo string) (int64, bool) {
 	blockNo, _ := strconv.ParseInt(hexBlockNo[2:], 16, 64)
 	key := fmt.Sprintf("%d|%s|%s", blockNo, asset.Hex(), holder.Hex())
-	if bal, ok := mapping[key]; ok {
+	if bal, ok := balanceMap[key]; ok {
 		return bal, true
 	}
 	return 0, false

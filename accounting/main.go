@@ -33,8 +33,6 @@ func (r *Reconciler) GetPostingChannel(block, tx int) <-chan Posting {
 			if p.Statement.Holder != r.addressOfInterest {
 				continue
 			}
-			eaKey := fmt.Sprintf("%d|%d|%d", block, tx, p.Statement.LogIndex)
-			p.EventAmount = eventAmounts[eaKey]
 			ch <- p
 		}
 	}()
@@ -75,7 +73,7 @@ func (r *Reconciler) flushBlock(buffer []Posting, modelChan chan<- Posting, wg *
 
 		if _, seen := r.seenBlocks[seenKey]; !seen {
 			prevBlock := fmt.Sprintf("0x%x", p.Statement.BlockNumber-1)
-			if onChain, ok := conn.GetBalanceAtToken(k.asset, k.holder, prevBlock); ok {
+			if onChain, ok := cc.GetBalanceAtToken(k.asset, k.holder, prevBlock); ok {
 				r.mu.Lock()
 				currentBal := r.runningBalances[fmt.Sprintf("%s|%s", k.asset, k.holder)]
 				if onChain != currentBal {
@@ -109,7 +107,7 @@ func (r *Reconciler) flushBlock(buffer []Posting, modelChan chan<- Posting, wg *
 	for k, idx := range lastPostings {
 		p := buffer[idx]
 		hexBlock := fmt.Sprintf("0x%x", p.Statement.BlockNumber)
-		if onChain, ok := conn.GetBalanceAtToken(k.asset, k.holder, hexBlock); ok {
+		if onChain, ok := cc.GetBalanceAtToken(k.asset, k.holder, hexBlock); ok {
 			r.mu.Lock()
 			currentBal := r.runningBalances[fmt.Sprintf("%s|%s", k.asset, k.holder)]
 			if onChain != currentBal {
