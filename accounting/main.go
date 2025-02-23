@@ -2,36 +2,11 @@ package main
 
 import (
 	"fmt"
-	"sort"
-	"strconv"
-	"strings"
 	"sync"
 
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/base"
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/types"
 )
-
-// Posting represents a single ledger event or correction
-type Posting struct {
-	types.Statement
-	CheckpointBalance int64
-	TentativeBalance  int64
-	CorrectionIndex   int
-	CorrectionReason  string
-	EventAmount       int64
-	BeginBalance      int64
-	RowIndex          int
-}
-
-func (p Posting) Reconciled(isFinal bool) string {
-	if p.CorrectionIndex != 0 {
-		return "true"
-	}
-	if !isFinal {
-		return "unknown"
-	}
-	return strconv.FormatBool(p.BeginBalance+p.EventAmount == p.CheckpointBalance)
-}
 
 type Reconciler struct {
 	mu                sync.Mutex
@@ -226,108 +201,8 @@ func main() {
 	<-done
 	wg.Wait()
 
-	sort.Slice(postings, func(i, j int) bool {
-		if postings[i].Statement.AssetAddress == postings[j].Statement.AssetAddress {
-			return postings[i].RowIndex < postings[j].RowIndex
-		}
-		return postings[i].Statement.AssetAddress.LessThan(postings[j].Statement.AssetAddress)
-	})
-
-	fmt.Println("Block\tTx\tLog\tCorrection\tReason\tAsset\tHolder\tBeginBal\tAmount\tTentative\tCheckpoint\tCheck1\tCheck2\tReconciled")
-	currentAsset := base.ZeroAddr
-	var lastTentative int64
+	printHeader()
 	for _, p := range postings {
-		isFinal := false
-		if p.CorrectionIndex == 0 {
-			lastTx := 0
-			for _, app := range apps {
-				if base.Blknum(app[0]) == p.Statement.BlockNumber && app[1] > lastTx {
-					lastTx = app[1]
-				}
-			}
-			if p.Statement.TransactionIndex == base.Txnum(lastTx) {
-				lastLog := 0
-				for _, logP := range logsByTx[mapKey(int(p.Statement.BlockNumber), lastTx, 0)] {
-					if logP.Statement.LogIndex > base.Lognum(lastLog) {
-						lastLog = int(logP.Statement.LogIndex)
-					}
-				}
-				if p.Statement.LogIndex == base.Lognum(lastLog) {
-					isFinal = true
-				}
-			}
-		}
-
-		assetShort := shortenAddress(p.Statement.AssetAddress)
-		holderShort := shortenAddress(p.Statement.Holder)
-
-		checkpoint := "-"
-		if reconciled := p.Reconciled(isFinal); reconciled != "unknown" {
-			checkpoint = fmt.Sprintf("%d", p.CheckpointBalance)
-		}
-
-		check1 := p.BeginBalance + p.EventAmount - p.TentativeBalance
-		check2 := "-"
-		if p.CorrectionIndex != 0 || isFinal {
-			check2 = fmt.Sprintf("%d", p.BeginBalance+p.EventAmount-p.CheckpointBalance)
-		}
-
-		corrIndexStr := "-"
-		if p.CorrectionIndex != 0 {
-			corrIndexStr = fmt.Sprintf("%d", p.CorrectionIndex)
-		}
-
-		if currentAsset != base.ZeroAddr && currentAsset != p.Statement.AssetAddress {
-			r.rowIndexMu.Lock()
-			r.rowIndexCounter++
-			r.rowIndexMu.Unlock()
-			fmt.Println(strings.Repeat("-", 120))
-			fmt.Printf("-\t-\t-\t-\t-\t%s\t-\t0\t0\t%d\t-\t0\t-\t-\n",
-				shortenAddress(currentAsset),
-				lastTentative,
-			)
-			fmt.Println()
-		}
-
-		fmt.Printf("%d\t%d\t%d\t%s\t%s\t%s\t%s\t%d\t%d\t%d\t%s\t%d\t%s\t%s\n",
-			p.Statement.BlockNumber,
-			p.Statement.TransactionIndex,
-			p.Statement.LogIndex,
-			corrIndexStr,
-			p.CorrectionReason,
-			assetShort,
-			holderShort,
-			p.BeginBalance,
-			p.EventAmount,
-			p.TentativeBalance,
-			checkpoint,
-			check1,
-			check2,
-			p.Reconciled(isFinal),
-		)
-
-		currentAsset = p.Statement.AssetAddress
-		lastTentative = p.TentativeBalance
-	}
-
-	if currentAsset != base.ZeroAddr {
-		r.rowIndexMu.Lock()
-		r.rowIndexCounter++
-		r.rowIndexMu.Unlock()
-		fmt.Println(strings.Repeat("-", 120))
-		fmt.Printf("-\t-\t-\t-\t-\t%s\t-\t0\t0\t%d\t-\t0\t-\t-\n",
-			shortenAddress(currentAsset),
-			lastTentative,
-		)
-		fmt.Println()
-	}
-
-	if len(postings) > 0 {
-		lastPosting := postings[len(postings)-1]
-		fmt.Println(strings.Repeat("=", 120))
-		fmt.Printf("-\t-\t-\t-\t-\tTotal\t-\t0\t0\t%d\t-\t0\t-\t-\n",
-			lastPosting.TentativeBalance,
-		)
-		fmt.Println()
+		p.printStatement()
 	}
 }

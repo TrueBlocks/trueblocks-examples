@@ -40,7 +40,7 @@ func initData() {
 		eventAmounts[key] = amount
 	}
 
-	logsFile, _ := os.Open("tests/logsByTransaction.csv")
+	logsFile, _ := os.Open("tests/logs.csv")
 	defer logsFile.Close()
 	logsReader := csv.NewReader(logsFile)
 	logsRecords, _ := logsReader.ReadAll()
@@ -59,7 +59,7 @@ func initData() {
 		logsByTx[key] = append(logsByTx[key], p)
 	}
 
-	mapFile, _ := os.Open("tests/mapping.csv")
+	mapFile, _ := os.Open("tests/balances.csv")
 	defer mapFile.Close()
 	mapReader := csv.NewReader(mapFile)
 	mapRecords, _ := mapReader.ReadAll()
