@@ -32,6 +32,7 @@ func printHeader() {
 }
 
 func (p *Posting) printStatement() {
+	p.Holder = base.HexToAddress("0xf")
 	reconciles, byCheckpoint := p.Reconciled()
 	fmt.Printf("%s\t%s\t%d\t%d\t%d\t%d\t%d\t%s\t%d\t%d\t%d\t%d\t%d\t%d\t%t\t%t\n",
 		p.Statement.AssetAddress.Display(0, 1),
