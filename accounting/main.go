@@ -30,7 +30,7 @@ func (r *Reconciler) GetPostingChannel(block, tx int) <-chan Posting {
 	go func() {
 		defer close(ch)
 		for _, p := range logsByTx[mapKey(block, tx, 0)] {
-			if p.Statement.Holder != r.addressOfInterest {
+			if p.Holder != r.addressOfInterest {
 				continue
 			}
 			ch <- p
@@ -68,7 +68,7 @@ func (r *Reconciler) flushBlock(buffer []Posting, modelChan chan<- Posting, wg *
 
 	lastPostings := make(map[key]int)
 	for i, p := range buffer {
-		k := key{p.Statement.AssetAddress, p.Statement.Holder}
+		k := key{p.Statement.AssetAddress, p.Holder}
 		seenKey := fmt.Sprintf("%d|%s|%s", p.Statement.BlockNumber, k.asset, k.holder)
 
 		if _, seen := r.seenBlocks[seenKey]; !seen {

@@ -3,12 +3,14 @@ package main
 import (
 	"fmt"
 
+	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/base"
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/types"
 )
 
 // Posting represents a single ledger event or correction
 type Posting struct {
 	types.Statement
+	Holder            base.Address
 	RowIndex          int
 	CorrectionIndex   int
 	CorrectionReason  string
@@ -33,7 +35,7 @@ func (p *Posting) printStatement() {
 	reconciles, byCheckpoint := p.Reconciled()
 	fmt.Printf("%s\t%s\t%d\t%d\t%d\t%d\t%d\t%s\t%d\t%d\t%d\t%d\t%d\t%d\t%t\t%t\n",
 		p.Statement.AssetAddress.Display(0, 1),
-		p.Statement.Holder.Display(0, 1),
+		p.Holder.Display(0, 1),
 		p.Statement.BlockNumber,
 		p.Statement.TransactionIndex,
 		p.Statement.LogIndex,

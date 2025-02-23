@@ -41,7 +41,7 @@ func initData() {
 		p.Statement.TransactionIndex = base.Txnum(tx)
 		p.Statement.LogIndex = base.Lognum(log)
 		p.Statement.AssetAddress = base.HexToAddress(record[3])
-		p.Statement.Holder = base.HexToAddress(record[4])
+		p.Holder = base.HexToAddress(record[4])
 		p.CheckpointBalance, _ = strconv.ParseInt(record[5], 10, 64)
 		p.EventAmount, _ = strconv.ParseInt(record[6], 10, 64)
 		key := mapKey(block, tx, 0)
