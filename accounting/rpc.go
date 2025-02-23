@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"strconv"
 
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/base"
 )
@@ -14,9 +13,8 @@ var (
 // Connection provides on-chain balance lookups
 type Connection struct{}
 
-func (c *Connection) GetBalanceAtToken(asset base.Address, holder base.Address, hexBlockNo string) (int64, bool) {
-	blockNo, _ := strconv.ParseInt(hexBlockNo[2:], 16, 64)
-	key := fmt.Sprintf("%d|%s|%s", blockNo, asset.Hex(), holder.Hex())
+func (c *Connection) GetBalanceAtToken(asset base.Address, holder base.Address, bn base.Blknum) (int64, bool) {
+	key := fmt.Sprintf("%d|%s|%s", bn, asset.Hex(), holder.Hex())
 	if bal, ok := balanceMap[key]; ok {
 		return bal, true
 	}
