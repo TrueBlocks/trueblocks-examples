@@ -39,7 +39,7 @@ func (r *Reconciler) GetPostingChannel(block, tx int) <-chan types.Posting {
 	return ch
 }
 
-func (r *Reconciler) flushBlock(postings []types.Posting, modelChan chan<- types.Posting, wg *sync.WaitGroup) {
+func (r *Reconciler) flushBlock(postings []types.Posting, modelChan chan<- types.Posting) {
 	type key struct {
 		asset  base.Address
 		holder base.Address
@@ -61,8 +61,7 @@ func (r *Reconciler) flushBlock(postings []types.Posting, modelChan chan<- types
 		r.statementIndex++
 		correction.StatementId = r.statementIndex
 		r.rowIndexMu.Unlock()
-		r.runningBalances[fmt.Sprintf("%s|%s", k.asset, k.holder.Hex())] = onChain
-		wg.Add(1)
+		r.runningBalances[fmt.Sprintf("%s|%s", k.asset, k.holder)] = onChain
 		return correction
 	}
 
@@ -98,7 +97,6 @@ func (r *Reconciler) flushBlock(postings []types.Posting, modelChan chan<- types
 	}
 
 	for _, p := range postings {
-		wg.Add(1)
 		modelChan <- p
 	}
 
@@ -115,7 +113,7 @@ func (r *Reconciler) flushBlock(postings []types.Posting, modelChan chan<- types
 	}
 }
 
-func (r *Reconciler) processStream(modelChan chan<- types.Posting, wg *sync.WaitGroup) {
+func (r *Reconciler) processStream(modelChan chan<- types.Posting) {
 	globalStream := make(chan types.Posting)
 	go func() {
 		defer close(globalStream)
@@ -148,11 +146,11 @@ func (r *Reconciler) processStream(modelChan chan<- types.Posting, wg *sync.Wait
 	for posting := range globalStream {
 		switch posting.Statement.AssetAddress {
 		case EndOfBlockSentinel:
-			r.flushBlock(postings, modelChan, wg)
+			r.flushBlock(postings, modelChan)
 			postings = nil
 		case EndOfStreamSentinel:
 			if len(postings) > 0 {
-				r.flushBlock(postings, modelChan, wg)
+				r.flushBlock(postings, modelChan)
 			}
 			return
 		default:
@@ -162,34 +160,20 @@ func (r *Reconciler) processStream(modelChan chan<- types.Posting, wg *sync.Wait
 }
 
 func main() {
-	initData()
-	modelChan := make(chan types.Posting, 1000)
-	var wg sync.WaitGroup
 	r := &Reconciler{
 		addressOfInterest: base.HexToAddress("0xf"),
 		runningBalances:   make(map[string]int64),
 		seenBlocks:        make(map[string]base.Blknum),
 	}
 
-	done := make(chan struct{})
-
+	modelChan := make(chan types.Posting, 1000)
 	go func() {
 		defer close(modelChan)
-		r.processStream(modelChan, &wg)
-		close(done)
+		r.processStream(modelChan)
 	}()
 
-	var postings []types.Posting
-	for p := range modelChan {
-		postings = append(postings, p)
-		wg.Done()
-	}
-
-	<-done
-	wg.Wait()
-
 	types.PrintHeader()
-	for _, p := range postings {
+	for p := range modelChan {
 		p.PrintStatement()
 	}
 }

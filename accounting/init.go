@@ -61,3 +61,7 @@ func initData() {
 		balanceMap[key] = bal
 	}
 }
+
+func init() {
+	initData()
+}
