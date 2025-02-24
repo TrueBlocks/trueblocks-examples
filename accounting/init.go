@@ -7,16 +7,17 @@ import (
 	"strconv"
 
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/base"
+	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/types"
 )
 
 var (
 	balanceMap map[string]int64
-	logsByTx   map[int][]Posting
+	logsByTx   map[int][]types.Posting
 )
 
 func initData() {
 	balanceMap = make(map[string]int64)
-	logsByTx = make(map[int][]Posting)
+	logsByTx = make(map[int][]types.Posting)
 
 	appsFile, _ := os.Open("tests/apps.csv")
 	defer appsFile.Close()
@@ -36,7 +37,7 @@ func initData() {
 		block, _ := strconv.Atoi(record[0])
 		tx, _ := strconv.Atoi(record[1])
 		log, _ := strconv.Atoi(record[2])
-		p := Posting{}
+		p := types.Posting{}
 		p.Statement.BlockNumber = base.Blknum(block)
 		p.Statement.TransactionIndex = base.Txnum(tx)
 		p.Statement.LogIndex = base.Lognum(log)

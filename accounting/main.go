@@ -25,8 +25,8 @@ var (
 	EndOfStreamSentinel = base.HexToAddress("0xbeefdeadbeefdeadbeefdeadbeefdeadbeefdead")
 )
 
-func (r *Reconciler) GetPostingChannel(block, tx int) <-chan Posting {
-	ch := make(chan Posting)
+func (r *Reconciler) GetPostingChannel(block, tx int) <-chan types.Posting {
+	ch := make(chan types.Posting)
 	go func() {
 		defer close(ch)
 		for _, p := range logsByTx[mapKey(block, tx, 0)] {
@@ -39,15 +39,15 @@ func (r *Reconciler) GetPostingChannel(block, tx int) <-chan Posting {
 	return ch
 }
 
-func (r *Reconciler) flushBlock(postings []Posting, modelChan chan<- Posting, wg *sync.WaitGroup) {
+func (r *Reconciler) flushBlock(postings []types.Posting, modelChan chan<- types.Posting, wg *sync.WaitGroup) {
 	type key struct {
 		asset  base.Address
 		holder base.Address
 	}
-	correctingEntry := func(k key, reason string, onChain, currentBal int64, p *Posting) Posting {
+	correctingEntry := func(k key, reason string, onChain, currentBal int64, p *types.Posting) types.Posting {
 		r.counterMu.Lock()
 		r.correctionCounter++
-		correction := Posting{
+		correction := types.Posting{
 			EventAmount:      onChain - currentBal,
 			BeginBalance:     currentBal,
 			CorrectionIndex:  r.correctionCounter,
@@ -115,15 +115,15 @@ func (r *Reconciler) flushBlock(postings []Posting, modelChan chan<- Posting, wg
 	}
 }
 
-func (r *Reconciler) processStream(modelChan chan<- Posting, wg *sync.WaitGroup) {
-	globalStream := make(chan Posting)
+func (r *Reconciler) processStream(modelChan chan<- types.Posting, wg *sync.WaitGroup) {
+	globalStream := make(chan types.Posting)
 	go func() {
 		defer close(globalStream)
 		var prevBlock int
 		for _, app := range apps {
 			block, tx := app[0], app[1]
 			if block != prevBlock && prevBlock != 0 {
-				globalStream <- Posting{Statement: types.Statement{
+				globalStream <- types.Posting{Statement: types.Statement{
 					BlockNumber:  base.Blknum(prevBlock),
 					AssetAddress: EndOfBlockSentinel,
 				}}
@@ -134,17 +134,17 @@ func (r *Reconciler) processStream(modelChan chan<- Posting, wg *sync.WaitGroup)
 			prevBlock = block
 		}
 		if prevBlock != 0 {
-			globalStream <- Posting{Statement: types.Statement{
+			globalStream <- types.Posting{Statement: types.Statement{
 				BlockNumber:  base.Blknum(prevBlock),
 				AssetAddress: EndOfBlockSentinel,
 			}}
 		}
-		globalStream <- Posting{Statement: types.Statement{
+		globalStream <- types.Posting{Statement: types.Statement{
 			AssetAddress: EndOfStreamSentinel,
 		}}
 	}()
 
-	var postings []Posting
+	var postings []types.Posting
 	for posting := range globalStream {
 		switch posting.Statement.AssetAddress {
 		case EndOfBlockSentinel:
@@ -161,17 +161,9 @@ func (r *Reconciler) processStream(modelChan chan<- Posting, wg *sync.WaitGroup)
 	}
 }
 
-func shortenAddress(address base.Address) string {
-	addr := address.Hex()
-	if len(addr) == 42 {
-		return addr[:2] + addr[len(addr)-1:]
-	}
-	return addr
-}
-
 func main() {
 	initData()
-	modelChan := make(chan Posting, 1000)
+	modelChan := make(chan types.Posting, 1000)
 	var wg sync.WaitGroup
 	r := &Reconciler{
 		addressOfInterest: base.HexToAddress("0xf"),
@@ -187,7 +179,7 @@ func main() {
 		close(done)
 	}()
 
-	var postings []Posting
+	var postings []types.Posting
 	for p := range modelChan {
 		postings = append(postings, p)
 		wg.Done()
@@ -196,8 +188,8 @@ func main() {
 	<-done
 	wg.Wait()
 
-	printHeader()
+	types.PrintHeader()
 	for _, p := range postings {
-		p.printStatement()
+		p.PrintStatement()
 	}
 }
