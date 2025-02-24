@@ -11,7 +11,7 @@ import (
 type Posting struct {
 	types.Statement
 	Holder            base.Address
-	RowIndex          int
+	StatementId       int
 	CorrectionIndex   int
 	CorrectionReason  string
 	BeginBalance      int64
@@ -40,7 +40,7 @@ func (p *Posting) printStatement() {
 		p.Statement.BlockNumber,
 		p.Statement.TransactionIndex,
 		p.Statement.LogIndex,
-		p.RowIndex,
+		p.StatementId,
 		p.CorrectionIndex,
 		p.CorrectionReason,
 		p.BeginBalance,

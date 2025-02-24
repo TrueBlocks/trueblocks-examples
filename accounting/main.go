@@ -15,7 +15,7 @@ type Reconciler struct {
 	seenBlocks        map[string]base.Blknum
 	correctionCounter int
 	counterMu         sync.Mutex
-	rowIndexCounter   int
+	statementIndex    int
 	rowIndexMu        sync.Mutex
 }
 
@@ -39,7 +39,7 @@ func (r *Reconciler) GetPostingChannel(block, tx int) <-chan Posting {
 	return ch
 }
 
-func (r *Reconciler) flushBlock(buffer []Posting, modelChan chan<- Posting, wg *sync.WaitGroup) {
+func (r *Reconciler) flushBlock(postings []Posting, modelChan chan<- Posting, wg *sync.WaitGroup) {
 	type key struct {
 		asset  base.Address
 		holder base.Address
@@ -58,8 +58,8 @@ func (r *Reconciler) flushBlock(buffer []Posting, modelChan chan<- Posting, wg *
 		correction.TentativeBalance = onChain
 		correction.CheckpointBalance = onChain
 		r.rowIndexMu.Lock()
-		r.rowIndexCounter++
-		correction.RowIndex = r.rowIndexCounter
+		r.statementIndex++
+		correction.StatementId = r.statementIndex
 		r.rowIndexMu.Unlock()
 		r.runningBalances[fmt.Sprintf("%s|%s", k.asset, k.holder.Hex())] = onChain
 		wg.Add(1)
@@ -67,7 +67,7 @@ func (r *Reconciler) flushBlock(buffer []Posting, modelChan chan<- Posting, wg *
 	}
 
 	lastPostings := make(map[key]int)
-	for i, p := range buffer {
+	for i, p := range postings {
 		k := key{p.Statement.AssetAddress, p.Holder}
 		seenKey := fmt.Sprintf("%d|%s|%s", p.Statement.BlockNumber, k.asset, k.holder)
 
@@ -84,27 +84,26 @@ func (r *Reconciler) flushBlock(buffer []Posting, modelChan chan<- Posting, wg *
 		}
 
 		r.mu.Lock()
-		runningKey := fmt.Sprintf("%s|%s", k.asset, k.holder)
-		p.BeginBalance = r.runningBalances[runningKey]
+		p.BeginBalance = r.runningBalances[fmt.Sprintf("%s|%s", k.asset, k.holder)]
 		p.TentativeBalance = p.BeginBalance + p.EventAmount
-		r.runningBalances[runningKey] = p.TentativeBalance
+		r.runningBalances[fmt.Sprintf("%s|%s", k.asset, k.holder)] = p.TentativeBalance
 		r.rowIndexMu.Lock()
-		r.rowIndexCounter++
-		p.RowIndex = r.rowIndexCounter
+		r.statementIndex++
+		p.StatementId = r.statementIndex
 		r.rowIndexMu.Unlock()
 		r.mu.Unlock()
 
-		buffer[i] = p
+		postings[i] = p
 		lastPostings[k] = i
 	}
 
-	for _, p := range buffer {
+	for _, p := range postings {
 		wg.Add(1)
 		modelChan <- p
 	}
 
 	for k, idx := range lastPostings {
-		p := buffer[idx]
+		p := postings[idx]
 		if onChain, ok := cc.GetBalanceAtToken(k.asset, k.holder, p.Statement.BlockNumber); ok {
 			r.mu.Lock()
 			currentBal := r.runningBalances[fmt.Sprintf("%s|%s", k.asset, k.holder)]
@@ -145,19 +144,19 @@ func (r *Reconciler) processStream(modelChan chan<- Posting, wg *sync.WaitGroup)
 		}}
 	}()
 
-	var buffer []Posting
+	var postings []Posting
 	for posting := range globalStream {
 		switch posting.Statement.AssetAddress {
 		case EndOfBlockSentinel:
-			r.flushBlock(buffer, modelChan, wg)
-			buffer = nil
+			r.flushBlock(postings, modelChan, wg)
+			postings = nil
 		case EndOfStreamSentinel:
-			if len(buffer) > 0 {
-				r.flushBlock(buffer, modelChan, wg)
+			if len(postings) > 0 {
+				r.flushBlock(postings, modelChan, wg)
 			}
 			return
 		default:
-			buffer = append(buffer, posting)
+			postings = append(postings, posting)
 		}
 	}
 }
