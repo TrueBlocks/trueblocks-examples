@@ -1,4 +1,4 @@
-block,asset,holder,balance
+block,asset,holder,endBal
 12,0x6,0xf,1000
 13,0x6,0xf,1500
 14,0x6,0xf,2000
