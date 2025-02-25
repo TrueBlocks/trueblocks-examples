@@ -171,12 +171,10 @@ func (r *Reconciler) flushBlock(postings []Posting2, modelChan chan<- types.Mode
 	for _, idx := range assetLastSeen {
 		p := postings[idx]
 		key := assetHolderKey{Asset: p.AssetAddress, Holder: p.Holder}
-		if onChain, ok := r.conn.GetBalanceAtToken(p.AssetAddress, p.Holder, p.BlockNumber); ok {
-			currentBal := r.runningBal[key]
-			if !onChain.Equal(&currentBal) {
-				correctingEntry := r.correctingEntry("imb", onChain, currentBal, &p)
-				modelChan <- &correctingEntry
-			}
+		currentBal := r.runningBal[key]
+		if !p.CheckpointBalance.Equal(&currentBal) {
+			correctingEntry := r.correctingEntry("imb", p.CheckpointBalance, currentBal, &p)
+			modelChan <- &correctingEntry
 		}
 	}
 }
@@ -262,26 +260,6 @@ func (r *Reconciler) initData() {
 		})
 	}
 
-	// blockNumber,transactionIndex,logIndex,assetAddress,accountedFor,amountNet,endBal
-	logsFile, _ := os.Open("tests/transfers.csv")
-	defer logsFile.Close()
-	logsReader := csv.NewReader(logsFile)
-	logsRecords, _ := logsReader.ReadAll()
-	for _, record := range logsRecords[1:] {
-		p := Posting2{
-			BlockNumber:       base.Blknum(base.MustParseUint64(record[0])),
-			TransactionIndex:  base.Txnum(base.MustParseUint64(record[1])),
-			LogIndex:          base.Lognum(base.MustParseUint64(record[2])),
-			AssetAddress:      base.HexToAddress(record[3]),
-			Holder:            base.HexToAddress(record[4]),
-			EventAmount:       *base.NewWei(base.MustParseInt64(record[5])),
-			CheckpointBalance: *base.NewWei(base.MustParseInt64(record[6])),
-		}
-
-		key := blockTxKey{BlockNumber: p.BlockNumber, TransactionIndex: p.TransactionIndex}
-		r.transfers[key] = append(r.transfers[key], p)
-	}
-
 	// blockNumber,assetAddress,accountedFor,endBal
 	balFile, _ := os.Open("tests/balances.csv")
 	defer balFile.Close()
@@ -297,6 +275,26 @@ func (r *Reconciler) initData() {
 
 		key := bnAssetHolderKey{BlockNumber: b.BlockNumber, Asset: b.Asset, Holder: b.Holder}
 		r.conn.balanceMap[key] = b.Balance
+	}
+
+	// blockNumber,transactionIndex,logIndex,assetAddress,accountedFor,amountNet,endBal
+	logsFile, _ := os.Open("tests/transfers.csv")
+	defer logsFile.Close()
+	logsReader := csv.NewReader(logsFile)
+	logsRecords, _ := logsReader.ReadAll()
+	for _, record := range logsRecords[1:] {
+		p := Posting2{
+			BlockNumber:      base.Blknum(base.MustParseUint64(record[0])),
+			TransactionIndex: base.Txnum(base.MustParseUint64(record[1])),
+			LogIndex:         base.Lognum(base.MustParseUint64(record[2])),
+			AssetAddress:     base.HexToAddress(record[3]),
+			Holder:           base.HexToAddress(record[4]),
+			EventAmount:      *base.NewWei(base.MustParseInt64(record[5])),
+		}
+		p.CheckpointBalance, _ = r.conn.GetBalanceAtToken(p.AssetAddress, p.Holder, p.BlockNumber)
+
+		key := blockTxKey{BlockNumber: p.BlockNumber, TransactionIndex: p.TransactionIndex}
+		r.transfers[key] = append(r.transfers[key], p)
 	}
 }
 
