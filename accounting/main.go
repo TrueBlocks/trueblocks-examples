@@ -4,167 +4,216 @@ import (
 	"encoding/csv"
 	"fmt"
 	"os"
-	"strconv"
-	"sync"
 
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/base"
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/types"
 )
 
-type Reconciler struct {
-	mu                sync.Mutex
-	addressOfInterest base.Address
-	runningBalMap     map[string]int64
-	seenBlockMap      map[string]base.Blknum
-	balanceMap        map[string]int64
-	logsMap           map[MapKey][]types.Posting
-	lastPostingsMap   map[key]int
-	correctionCounter int
-	counterMu         sync.Mutex
-	statementIndex    int
-	rowIndexMu        sync.Mutex
+type Posting2 struct {
+	// Statement
+	Holder            base.Address
+	StatementId       int
+	CorrectionIndex   int
+	CorrectionReason  string
+	BeginBalance      base.Wei
+	EventAmount       base.Wei
+	TentativeBalance  base.Wei
+	CheckpointBalance base.Wei
+	AssetAddress      base.Address `json:"assetAddress"`
+	BlockNumber       base.Blknum  `json:"blockNumber"`
+	LogIndex          base.Lognum  `json:"logIndex"`
+	TransactionIndex  base.Txnum   `json:"transactionIndex"`
 }
 
+func (p Posting2) Reconciled() (base.Wei, base.Wei, bool, bool) {
+	checkVal := *new(base.Wei).Add(&p.BeginBalance, &p.EventAmount)
+	tentativeDiff := *new(base.Wei).Sub(&checkVal, &p.TentativeBalance)
+	checkpointDiff := *new(base.Wei).Sub(&checkVal, &p.CheckpointBalance)
+	tentativeEqual := checkVal.Equal(&p.TentativeBalance)
+	checkpointEqual := checkVal.Equal(&p.CheckpointBalance)
+	if checkpointEqual {
+		return tentativeDiff, checkpointDiff, true, true
+	}
+	return tentativeDiff, checkpointDiff, tentativeEqual, false
+}
+
+func PrintHeader() {
+	fmt.Println("Asset\tHolder\tBlock\tTx\tLog\tRow\tCorr\tReason\tBegBal\tAmount\tTenBal\tChkBal\tCheck1\tCheck2\tRec\tCp")
+}
+
+// ---------------------------------------------------------
+func (p *Posting2) Model(chain, format string, verbose bool, extraOpts map[string]any) types.Model {
+	_, _, _, _ = chain, format, verbose, extraOpts
+	check1, check2, reconciles, byCheckpoint := p.Reconciled()
+	fmt.Printf("%s\t%s\t%d\t%d\t%d\t%d\t%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%t\t%t\n",
+		p.AssetAddress.Display(0, 1),
+		p.Holder.Display(0, 1),
+		p.BlockNumber,
+		p.TransactionIndex,
+		p.LogIndex,
+		p.StatementId,
+		p.CorrectionIndex,
+		p.CorrectionReason,
+		p.BeginBalance.Text(10),
+		p.EventAmount.Text(10),
+		p.TentativeBalance.Text(10),
+		p.CheckpointBalance.Text(10),
+		check1.Text(10),
+		check2.Text(10),
+		reconciles,
+		byCheckpoint,
+	)
+	return types.Model{}
+}
+
+// ---------------------------------------------------------
+type Balance2 struct {
+	BlockNumber base.Blknum
+	Asset       base.Address
+	Holder      base.Address
+	Balance     base.Wei
+}
+
+// ---------------------------------------------------------
+type Reconciler struct {
+	conn              *Connection
+	account           base.Address
+	runningBal        map[assetHolderKey]base.Wei
+	transfers         map[blockTxKey][]Posting2
+	correctionCounter int
+	statementIndex    int
+}
+
+// ---------------------------------------------------------
 func NewReconciler(addr base.Address) *Reconciler {
 	r := &Reconciler{
-		addressOfInterest: addr,
-		runningBalMap:     make(map[string]int64),
-		seenBlockMap:      make(map[string]base.Blknum),
-		lastPostingsMap:   make(map[key]int),
-		balanceMap:        make(map[string]int64),
-		logsMap:           make(map[MapKey][]types.Posting),
+		account:    addr,
+		runningBal: make(map[assetHolderKey]base.Wei),
+		transfers:  make(map[blockTxKey][]Posting2),
+		conn:       NewConnection(),
 	}
+
 	r.initData()
+
 	return r
 }
 
+// ---------------------------------------------------------
 var (
 	apps                []types.Appearance
 	EndOfBlockSentinel  = base.HexToAddress("0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef")
 	EndOfStreamSentinel = base.HexToAddress("0xbeefdeadbeefdeadbeefdeadbeefdeadbeefdead")
 )
 
-type key struct {
-	asset  base.Address
-	holder base.Address
-}
-
-func (r *Reconciler) GetPostingChannel(app *types.Appearance) <-chan types.Posting {
-	ch := make(chan types.Posting)
+// ---------------------------------------------------------
+func (r *Reconciler) getPostingChannel(app *types.Appearance) <-chan Posting2 {
+	ch := make(chan Posting2)
 	go func() {
 		defer close(ch)
-		logKey := logsKey(base.Blknum(app.BlockNumber), base.Txnum(app.TransactionIndex), base.Lognum(0))
-		for _, p := range r.logsMap[logKey] {
-			if p.Holder != r.addressOfInterest {
-				continue
+		key := blockTxKey{BlockNumber: base.Blknum(app.BlockNumber), TransactionIndex: base.Txnum(app.TransactionIndex)}
+		for _, p := range r.transfers[key] {
+			if p.Holder == r.account {
+				ch <- p
 			}
-			ch <- p
 		}
 	}()
 	return ch
 }
 
-func (r *Reconciler) flushBlock(postings []types.Posting, modelChan chan<- types.Posting) {
-	correctingEntry := func(k key, reason string, onChain, currentBal int64, p *types.Posting) types.Posting {
-		r.counterMu.Lock()
-		r.correctionCounter++
-		correction := types.Posting{
-			EventAmount:      onChain - currentBal,
-			BeginBalance:     currentBal,
-			CorrectionIndex:  r.correctionCounter,
-			CorrectionReason: reason,
-		}
-		r.counterMu.Unlock()
-		correction.Statement = p.Statement
-		correction.TentativeBalance = onChain
-		correction.CheckpointBalance = onChain
-		r.rowIndexMu.Lock()
-		r.statementIndex++
-		correction.StatementId = r.statementIndex
-		r.rowIndexMu.Unlock()
-		r.runningBalMap[fmt.Sprintf("%s|%s", k.asset, k.holder)] = onChain
-		return correction
-	}
+// ---------------------------------------------------------
+func (r *Reconciler) correctingEntry(reason string, onChain, currentBal base.Wei, p *Posting2) Posting2 {
+	correction := *p
+	correction.EventAmount = *new(base.Wei).Sub(&onChain, &currentBal)
+	correction.BeginBalance = currentBal
+	correction.TentativeBalance = onChain
+	correction.CheckpointBalance = onChain
 
-	r.lastPostingsMap = make(map[key]int)
+	r.correctionCounter++
+	correction.CorrectionIndex = r.correctionCounter
+	correction.CorrectionReason = reason
+
+	r.statementIndex++
+	correction.StatementId = r.statementIndex
+
+	key := assetHolderKey{Asset: p.AssetAddress, Holder: p.Holder}
+	r.runningBal[key] = onChain
+	return correction
+}
+
+// ---------------------------------------------------------
+func (r *Reconciler) flushBlock(postings []Posting2, modelChan chan<- types.Modeler) {
+	assetSeen := make(map[base.Address]bool)
+	assetLastSeen := make(map[base.Address]int)
 	for i, p := range postings {
-		k := key{p.Statement.AssetAddress, p.Holder}
-		seenKey := fmt.Sprintf("%d|%s|%s", p.Statement.BlockNumber, k.asset, k.holder)
-
-		if _, seen := r.seenBlockMap[seenKey]; !seen {
-			if onChain, ok := r.GetBalanceAtToken(k.asset, k.holder, p.Statement.BlockNumber-1); ok {
-				r.mu.Lock()
-				currentBal := r.runningBalMap[fmt.Sprintf("%s|%s", k.asset, k.holder)]
-				if onChain != currentBal {
-					modelChan <- correctingEntry(k, "mis", onChain, currentBal, &p)
+		key := assetHolderKey{Asset: p.AssetAddress, Holder: p.Holder}
+		if !assetSeen[p.AssetAddress] {
+			if onChain, ok := r.conn.GetBalanceAtToken(p.AssetAddress, p.Holder, p.BlockNumber-1); ok {
+				currentBal := r.runningBal[key]
+				if !onChain.Equal(&currentBal) {
+					correctingEntry := r.correctingEntry("mis", onChain, currentBal, &p)
+					modelChan <- &correctingEntry
 				}
-				r.mu.Unlock()
 			}
-			r.seenBlockMap[seenKey] = p.Statement.BlockNumber
+			assetSeen[p.AssetAddress] = true
 		}
 
-		r.mu.Lock()
-		p.BeginBalance = r.runningBalMap[fmt.Sprintf("%s|%s", k.asset, k.holder)]
-		p.TentativeBalance = p.BeginBalance + p.EventAmount
-		r.runningBalMap[fmt.Sprintf("%s|%s", k.asset, k.holder)] = p.TentativeBalance
-		r.rowIndexMu.Lock()
+		p.BeginBalance = r.runningBal[key]
+		p.TentativeBalance = *new(base.Wei).Add(&p.BeginBalance, &p.EventAmount)
+		r.runningBal[key] = p.TentativeBalance
 		r.statementIndex++
 		p.StatementId = r.statementIndex
-		r.rowIndexMu.Unlock()
-		r.mu.Unlock()
 
 		postings[i] = p
-		r.lastPostingsMap[k] = i
+		assetLastSeen[p.AssetAddress] = i
+		modelChan <- &p
 	}
 
-	for _, p := range postings {
-		modelChan <- p
-	}
-
-	for k, idx := range r.lastPostingsMap {
+	for _, idx := range assetLastSeen {
 		p := postings[idx]
-		if onChain, ok := r.GetBalanceAtToken(k.asset, k.holder, p.Statement.BlockNumber); ok {
-			r.mu.Lock()
-			currentBal := r.runningBalMap[fmt.Sprintf("%s|%s", k.asset, k.holder)]
-			if onChain != currentBal {
-				modelChan <- correctingEntry(k, "imb", onChain, currentBal, &p)
+		key := assetHolderKey{Asset: p.AssetAddress, Holder: p.Holder}
+		if onChain, ok := r.conn.GetBalanceAtToken(p.AssetAddress, p.Holder, p.BlockNumber); ok {
+			currentBal := r.runningBal[key]
+			if !onChain.Equal(&currentBal) {
+				correctingEntry := r.correctingEntry("imb", onChain, currentBal, &p)
+				modelChan <- &correctingEntry
 			}
-			r.mu.Unlock()
 		}
 	}
 }
 
-func (r *Reconciler) processStream(modelChan chan<- types.Posting) {
-	globalStream := make(chan types.Posting)
+// ---------------------------------------------------------
+func (r *Reconciler) processStream(modelChan chan<- types.Modeler) {
+	postingStream := make(chan Posting2, 100)
 	go func() {
-		defer close(globalStream)
+		defer close(postingStream)
 		var prevBlock base.Blknum
 		for _, app := range apps {
-			if base.Blknum(app.BlockNumber) != prevBlock && prevBlock != 0 {
-				globalStream <- types.Posting{Statement: types.Statement{
-					BlockNumber:  base.Blknum(prevBlock),
+			bn := base.Blknum(app.BlockNumber)
+			if bn != prevBlock && prevBlock != 0 {
+				postingStream <- Posting2{
+					BlockNumber:  prevBlock,
 					AssetAddress: EndOfBlockSentinel,
-				}}
+				}
 			}
-			for p := range r.GetPostingChannel(&app) {
-				globalStream <- p
+			for p := range r.getPostingChannel(&app) {
+				postingStream <- p
 			}
-			prevBlock = base.Blknum(app.BlockNumber)
+			prevBlock = bn
 		}
 		if prevBlock != 0 {
-			globalStream <- types.Posting{Statement: types.Statement{
-				BlockNumber:  base.Blknum(prevBlock),
+			postingStream <- Posting2{
+				BlockNumber:  prevBlock,
 				AssetAddress: EndOfBlockSentinel,
-			}}
+			}
 		}
-		globalStream <- types.Posting{Statement: types.Statement{
+		postingStream <- Posting2{
 			AssetAddress: EndOfStreamSentinel,
-		}}
+		}
 	}()
 
-	var postings []types.Posting
-	for posting := range globalStream {
-		switch posting.Statement.AssetAddress {
+	var postings []Posting2
+	for posting := range postingStream {
+		switch posting.AssetAddress {
 		case EndOfBlockSentinel:
 			r.flushBlock(postings, modelChan)
 			postings = nil
@@ -179,119 +228,114 @@ func (r *Reconciler) processStream(modelChan chan<- types.Posting) {
 	}
 }
 
+// ---------------------------------------------------------
 func main() {
 	if len(os.Args) < 2 {
-		fmt.Println("Usage: chifra <address>")
-		os.Exit(1)
+		os.Args = append(os.Args, "0xf")
 	}
 
 	r := NewReconciler(base.HexToAddress(os.Args[1]))
 
-	modelChan := make(chan types.Posting, 1000)
+	modelChan := make(chan types.Modeler, 1000)
 	go func() {
 		defer close(modelChan)
 		r.processStream(modelChan)
 	}()
 
-	types.PrintHeader()
+	PrintHeader()
 	for p := range modelChan {
-		p.PrintStatement()
+		p.Model("mainnet", "text", false, nil)
 	}
 }
 
+// ---------------------------------------------------------
 func (r *Reconciler) initData() {
-	r.balanceMap = make(map[string]int64)
-	r.logsMap = make(map[MapKey][]types.Posting)
-
 	// blockNumber,transactionIndex
 	appsFile, _ := os.Open("tests/apps.csv")
 	defer appsFile.Close()
 	appsReader := csv.NewReader(appsFile)
 	appsRecords, _ := appsReader.ReadAll()
 	for _, record := range appsRecords[1:] {
-		block, _ := strconv.Atoi(record[0])
-		tx, _ := strconv.Atoi(record[1])
 		apps = append(apps, types.Appearance{
-			BlockNumber:      uint32(block),
-			TransactionIndex: uint32(tx),
+			BlockNumber:      uint32(base.MustParseInt64(record[0])),
+			TransactionIndex: uint32(base.MustParseInt64(record[1])),
 		})
 	}
 
 	// blockNumber,transactionIndex,logIndex,assetAddress,accountedFor,amountNet,endBal
-	logsFile, _ := os.Open("tests/logs.csv")
+	logsFile, _ := os.Open("tests/transfers.csv")
 	defer logsFile.Close()
 	logsReader := csv.NewReader(logsFile)
 	logsRecords, _ := logsReader.ReadAll()
 	for _, record := range logsRecords[1:] {
-		block, _ := strconv.Atoi(record[0])
-		tx, _ := strconv.Atoi(record[1])
-		log, _ := strconv.Atoi(record[2])
-		p := types.Posting{}
-		p.Statement.BlockNumber = base.Blknum(block)
-		p.Statement.TransactionIndex = base.Txnum(tx)
-		p.Statement.LogIndex = base.Lognum(log)
-		p.Statement.AssetAddress = base.HexToAddress(record[3])
-		p.Holder = base.HexToAddress(record[4])
-		p.EventAmount, _ = strconv.ParseInt(record[5], 10, 64)
-		p.CheckpointBalance, _ = strconv.ParseInt(record[6], 10, 64)
-		logKey := logsKey(base.Blknum(block), base.Txnum(tx), base.Lognum(0))
-		r.logsMap[logKey] = append(r.logsMap[logKey], p)
+		p := Posting2{
+			BlockNumber:       base.Blknum(base.MustParseUint64(record[0])),
+			TransactionIndex:  base.Txnum(base.MustParseUint64(record[1])),
+			LogIndex:          base.Lognum(base.MustParseUint64(record[2])),
+			AssetAddress:      base.HexToAddress(record[3]),
+			Holder:            base.HexToAddress(record[4]),
+			EventAmount:       *base.NewWei(base.MustParseInt64(record[5])),
+			CheckpointBalance: *base.NewWei(base.MustParseInt64(record[6])),
+		}
+
+		key := blockTxKey{BlockNumber: p.BlockNumber, TransactionIndex: p.TransactionIndex}
+		r.transfers[key] = append(r.transfers[key], p)
 	}
 
 	// blockNumber,assetAddress,accountedFor,endBal
-	mapFile, _ := os.Open("tests/balances.csv")
-	defer mapFile.Close()
-	mapReader := csv.NewReader(mapFile)
-	mapRecords, _ := mapReader.ReadAll()
-	for _, record := range mapRecords[1:] {
-		asset := base.HexToAddress(record[1])
-		holder := base.HexToAddress(record[2])
-		key := fmt.Sprintf("%s|%s|%s", record[0], asset.Hex(), holder.Hex())
-		bal, _ := strconv.ParseInt(record[3], 10, 64)
-		r.balanceMap[key] = bal
+	balFile, _ := os.Open("tests/balances.csv")
+	defer balFile.Close()
+	balReader := csv.NewReader(balFile)
+	balRecords, _ := balReader.ReadAll()
+	for _, record := range balRecords[1:] {
+		b := Balance2{
+			BlockNumber: base.Blknum(base.MustParseUint64(record[0])),
+			Asset:       base.HexToAddress(record[1]),
+			Holder:      base.HexToAddress(record[2]),
+			Balance:     *base.NewWei(base.MustParseInt64(record[3])),
+		}
+
+		key := bnAssetHolderKey{BlockNumber: b.BlockNumber, Asset: b.Asset, Holder: b.Holder}
+		r.conn.balanceMap[key] = b.Balance
 	}
-	// logger.Info("Data initialized", len(apps), len(logsMap), len(balanceMap))
 }
 
-var (
-	cc Connection
-)
-
+// ---------------------------------------------------------
 // Connection provides on-chain balance lookups
-type Connection struct{}
+type Connection struct {
+	balanceMap map[bnAssetHolderKey]base.Wei
+}
 
-func (r *Reconciler) GetBalanceAtToken(asset base.Address, holder base.Address, bn base.Blknum) (int64, bool) {
-	key := fmt.Sprintf("%d|%s|%s", bn, asset.Hex(), holder.Hex())
-	if bal, ok := r.balanceMap[key]; ok {
+// ---------------------------------------------------------
+func NewConnection() *Connection {
+	return &Connection{
+		balanceMap: make(map[bnAssetHolderKey]base.Wei),
+	}
+}
+
+// ---------------------------------------------------------
+func (c *Connection) GetBalanceAtToken(asset base.Address, holder base.Address, bn base.Blknum) (base.Wei, bool) {
+	key := bnAssetHolderKey{BlockNumber: bn, Asset: asset, Holder: holder}
+	if bal, ok := c.balanceMap[key]; ok {
 		return bal, true
 	}
-	return 0, false
+	return *base.ZeroWei, false
 }
 
-type MapKey struct {
+// ---------------------------------------------------------
+type blockTxKey struct {
 	BlockNumber      base.Blknum
 	TransactionIndex base.Txnum
-	LogIndex         base.Lognum
-	Asset            base.Address
-	Holder           base.Address
 }
 
-func runningBalKey(asset base.Address, holder base.Address) MapKey {
-	return MapKey{Asset: asset, Holder: holder}
+// ---------------------------------------------------------
+type assetHolderKey struct {
+	Asset  base.Address
+	Holder base.Address
 }
 
-func seenBlockKey(bn base.Blknum, asset base.Address, holder base.Address) MapKey {
-	return MapKey{BlockNumber: bn, Asset: asset, Holder: holder}
-}
-
-func lastPostingsKey(asset base.Address, holder base.Address) MapKey {
-	return MapKey{Asset: asset, Holder: holder}
-}
-
-func balanceKey(bn base.Blknum, asset base.Address, holder base.Address) MapKey {
-	return MapKey{BlockNumber: bn, Asset: asset, Holder: holder}
-}
-
-func logsKey(bn base.Blknum, tx base.Txnum, log base.Lognum) MapKey {
-	return MapKey{BlockNumber: bn, TransactionIndex: tx, LogIndex: log}
+type bnAssetHolderKey struct {
+	BlockNumber base.Blknum
+	Asset       base.Address
+	Holder      base.Address
 }
