@@ -4,6 +4,8 @@ import (
 	"encoding/csv"
 	"fmt"
 	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/base"
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/types"
@@ -248,12 +250,19 @@ func main() {
 
 // ---------------------------------------------------------
 func (r *Reconciler) initData() {
+	folder := os.Getenv("FOLDER")
+	if folder == "" {
+		folder = "tests"
+	}
 	// blockNumber,transactionIndex
-	appsFile, _ := os.Open("tests/apps.csv")
+	appsFile, _ := os.Open(filepath.Join(folder, "apps.csv"))
 	defer appsFile.Close()
 	appsReader := csv.NewReader(appsFile)
 	appsRecords, _ := appsReader.ReadAll()
 	for _, record := range appsRecords[1:] {
+		if strings.HasPrefix(record[0], "#") {
+			continue
+		}
 		apps = append(apps, types.Appearance{
 			BlockNumber:      uint32(base.MustParseInt64(record[0])),
 			TransactionIndex: uint32(base.MustParseInt64(record[1])),
@@ -261,11 +270,14 @@ func (r *Reconciler) initData() {
 	}
 
 	// blockNumber,assetAddress,accountedFor,endBal
-	balFile, _ := os.Open("tests/balances.csv")
+	balFile, _ := os.Open(filepath.Join(folder, "balances.csv"))
 	defer balFile.Close()
 	balReader := csv.NewReader(balFile)
 	balRecords, _ := balReader.ReadAll()
 	for _, record := range balRecords[1:] {
+		if strings.HasPrefix(record[0], "#") {
+			continue
+		}
 		b := Balance2{
 			BlockNumber: base.Blknum(base.MustParseUint64(record[0])),
 			Asset:       base.HexToAddress(record[1]),
@@ -278,11 +290,14 @@ func (r *Reconciler) initData() {
 	}
 
 	// blockNumber,transactionIndex,logIndex,assetAddress,accountedFor,amountNet,endBal
-	logsFile, _ := os.Open("tests/transfers.csv")
+	logsFile, _ := os.Open(filepath.Join(folder, "transfers.csv"))
 	defer logsFile.Close()
 	logsReader := csv.NewReader(logsFile)
 	logsRecords, _ := logsReader.ReadAll()
 	for _, record := range logsRecords[1:] {
+		if strings.HasPrefix(record[0], "#") {
+			continue
+		}
 		p := Posting2{
 			BlockNumber:      base.Blknum(base.MustParseUint64(record[0])),
 			TransactionIndex: base.Txnum(base.MustParseUint64(record[1])),

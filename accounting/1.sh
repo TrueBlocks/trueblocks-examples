@@ -1,4 +1,10 @@
 #!/usr/bin/env bash
 
-chifra list $1 | cut -f2,3 | tr '\t' ',' >tests/apps.csv
-chifra export --accounting --statements 0xccd7fc08532953676ff801791def07d3617ec712 2>/dev/null | cut -f1,2,3,7,12,15,16,17 | tr '\t' ','  >tests/logs.csv
+echo "block,tx" >$1/apps.csv
+cat $1/$1.json | jq -r '.data[] | [.blockNumber, .transactionIndex] | join(",")' >>$1/apps.csv
+
+echo "block,tx,log,asset,holder,amount" >$1/transfers.csv
+cat $1/$1.json | jq -r '.data[] | [.blockNumber, .transactionIndex, .logIndex, .assetAddress, .accountedFor, .amountNet] | join(",")' >>$1/transfers.csv
+
+echo "block,asset,holder,endBal" >$1/balances.csv
+cat $1/$1.json | jq -r '.data[] | [.blockNumber, .assetAddress, .accountedFor, .endBal] | join(",")' >>$1/balances.csv
