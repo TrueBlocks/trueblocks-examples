@@ -11,8 +11,8 @@ import (
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/types"
 )
 
+// ---------------------------------------------------------
 type Posting2 struct {
-	// Statement
 	Holder            base.Address
 	StatementId       int
 	CorrectionIndex   int
@@ -27,6 +27,7 @@ type Posting2 struct {
 	TransactionIndex  base.Txnum   `json:"transactionIndex"`
 }
 
+// ---------------------------------------------------------
 func (p Posting2) Reconciled() (base.Wei, base.Wei, bool, bool) {
 	checkVal := *new(base.Wei).Add(&p.BeginBalance, &p.EventAmount)
 	tentativeDiff := *new(base.Wei).Sub(&checkVal, &p.TentativeBalance)
@@ -39,6 +40,7 @@ func (p Posting2) Reconciled() (base.Wei, base.Wei, bool, bool) {
 	return tentativeDiff, checkpointDiff, tentativeEqual, false
 }
 
+// ---------------------------------------------------------
 func PrintHeader() {
 	fmt.Println("Asset\tHolder\tBlock\tTx\tLog\tRow\tCorr\tReason\tBegBal\tAmount\tTenBal\tChkBal\tCheck1\tCheck2\tRec\tCp")
 }
@@ -255,7 +257,8 @@ func (r *Reconciler) initData() {
 		folder = "tests"
 	}
 	// blockNumber,transactionIndex
-	appsFile, _ := os.Open(filepath.Join(folder, "apps.csv"))
+	appsFn := filepath.Join(folder, "apps.csv")
+	appsFile, _ := os.Open(appsFn)
 	defer appsFile.Close()
 	appsReader := csv.NewReader(appsFile)
 	appsRecords, _ := appsReader.ReadAll()
@@ -270,7 +273,8 @@ func (r *Reconciler) initData() {
 	}
 
 	// blockNumber,assetAddress,accountedFor,endBal
-	balFile, _ := os.Open(filepath.Join(folder, "balances.csv"))
+	balFn := filepath.Join(folder, "balances.csv")
+	balFile, _ := os.Open(balFn)
 	defer balFile.Close()
 	balReader := csv.NewReader(balFile)
 	balRecords, _ := balReader.ReadAll()
@@ -282,7 +286,7 @@ func (r *Reconciler) initData() {
 			BlockNumber: base.Blknum(base.MustParseUint64(record[0])),
 			Asset:       base.HexToAddress(record[1]),
 			Holder:      base.HexToAddress(record[2]),
-			Balance:     *base.NewWei(base.MustParseInt64(record[3])),
+			Balance:     *base.NewWeiStr(record[3]),
 		}
 
 		key := bnAssetHolderKey{BlockNumber: b.BlockNumber, Asset: b.Asset, Holder: b.Holder}
@@ -290,11 +294,12 @@ func (r *Reconciler) initData() {
 	}
 
 	// blockNumber,transactionIndex,logIndex,assetAddress,accountedFor,amountNet,endBal
-	logsFile, _ := os.Open(filepath.Join(folder, "transfers.csv"))
-	defer logsFile.Close()
-	logsReader := csv.NewReader(logsFile)
-	logsRecords, _ := logsReader.ReadAll()
-	for _, record := range logsRecords[1:] {
+	transfersFn := filepath.Join(folder, "transfers.csv")
+	transfersFile, _ := os.Open(transfersFn)
+	defer transfersFile.Close()
+	transfersReader := csv.NewReader(transfersFile)
+	transfersRecords, _ := transfersReader.ReadAll()
+	for _, record := range transfersRecords[1:] {
 		if strings.HasPrefix(record[0], "#") {
 			continue
 		}
@@ -304,7 +309,7 @@ func (r *Reconciler) initData() {
 			LogIndex:         base.Lognum(base.MustParseUint64(record[2])),
 			AssetAddress:     base.HexToAddress(record[3]),
 			Holder:           base.HexToAddress(record[4]),
-			EventAmount:      *base.NewWei(base.MustParseInt64(record[5])),
+			EventAmount:      *base.NewWeiStr(record[5]),
 		}
 		p.CheckpointBalance, _ = r.conn.GetBalanceAtToken(p.AssetAddress, p.Holder, p.BlockNumber)
 

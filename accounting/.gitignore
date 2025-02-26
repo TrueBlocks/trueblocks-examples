@@ -3,6 +3,8 @@ ick
 main
 all_tests.txt
 tests/0x*
+tests.2/0x*
 x
 xx
 x.txt
+output
