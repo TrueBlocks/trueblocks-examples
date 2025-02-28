@@ -28,15 +28,15 @@ type LedgerEntry struct {
 }
 
 // ---------------------------------------------------------
-func (p LedgerEntry) Calculated() base.Wei {
-	return *new(base.Wei).Add(&p.BegBal, &p.Amount)
+func (p LedgerEntry) EndBalCalc() *base.Wei {
+	return new(base.Wei).Add(&p.BegBal, &p.Amount)
 }
 
 // ---------------------------------------------------------
 func (p LedgerEntry) Reconciled() (base.Wei, base.Wei, bool, bool) {
-	calc := p.Calculated()
+	calc := p.EndBalCalc()
 	checkVal := *new(base.Wei).Add(&p.BegBal, &p.Amount)
-	tentativeDiff := *new(base.Wei).Sub(&checkVal, &calc)
+	tentativeDiff := *new(base.Wei).Sub(&checkVal, calc)
 	checkpointDiff := *new(base.Wei).Sub(&checkVal, &p.EndBal)
 
 	checkpointEqual := checkVal.Equal(&p.EndBal)
@@ -44,7 +44,7 @@ func (p LedgerEntry) Reconciled() (base.Wei, base.Wei, bool, bool) {
 		return tentativeDiff, checkpointDiff, true, true
 	}
 
-	tentativeEqual := checkVal.Equal(&calc)
+	tentativeEqual := checkVal.Equal(calc)
 	return tentativeDiff, checkpointDiff, tentativeEqual, false
 }
 
@@ -57,7 +57,7 @@ func PrintHeader() {
 func (p *LedgerEntry) Model(chain, format string, verbose bool, extraOpts map[string]any) types.Model {
 	_, _, _, _ = chain, format, verbose, extraOpts
 	check1, check2, reconciles, byCheckpoint := p.Reconciled()
-	calc := p.Calculated()
+	calc := p.EndBalCalc()
 	fmt.Printf("%s\t%s\t%d\t%d\t%d\t%d\t%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%t\t%t\n",
 		p.AssetAddress.Hex(),
 		p.Holder.Hex(),
@@ -175,7 +175,7 @@ func (r *Reconciler) flushBlock(postings []LedgerEntry, modelChan chan<- types.M
 		}
 
 		p.BegBal = r.accountLedger[key]
-		r.accountLedger[key] = p.Calculated()
+		r.accountLedger[key] = *p.EndBalCalc()
 		r.entryCounter++
 		p.StatementId = r.entryCounter
 		postings[i] = p
