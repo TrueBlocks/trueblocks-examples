@@ -50,8 +50,7 @@ func (p LedgerEntry) Reconciled() (base.Wei, base.Wei, bool, bool) {
 
 // ---------------------------------------------------------
 func PrintHeader() {
-	// fmt.Println("Asset\tHolder\tBlock\tTx\tLog\tRow\tCorr\tReason\tOpening\tAmount\tCalculated\tVerified\tCheck1\tCheck2\tRec\tCp")
-	fmt.Println("Asset\tHolder\tBlock\tTx\tLog\tRow\tCorr\tReason\tBegBal\tAmount\tTenBal\tChkBal\tCheck1\tCheck2\tRec\tCp")
+	fmt.Println("asset\tholder\tblockNumber\ttransactionIndex\tlogIndex\trowIndex\tcorrectionIndex\tcorrectionReason\tbegBal\tamountNet\tendBalCalc\tendBal\tcheck1\tcheck2\treconciled\tcheckpoint")
 }
 
 // ---------------------------------------------------------
@@ -60,8 +59,8 @@ func (p *LedgerEntry) Model(chain, format string, verbose bool, extraOpts map[st
 	check1, check2, reconciles, byCheckpoint := p.Reconciled()
 	calc := p.Calculated()
 	fmt.Printf("%s\t%s\t%d\t%d\t%d\t%d\t%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%t\t%t\n",
-		p.AssetAddress.Display(0, 1),
-		p.Holder.Display(0, 1),
+		p.AssetAddress.Hex(),
+		p.Holder.Hex(),
 		p.BlockNumber,
 		p.TransactionIndex,
 		p.LogIndex,
