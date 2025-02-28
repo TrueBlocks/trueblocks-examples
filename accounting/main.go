@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/csv"
-	"fmt"
 	"os"
 	"path/filepath"
 	"sort"
@@ -13,83 +12,12 @@ import (
 )
 
 // ---------------------------------------------------------
-type LedgerEntry struct {
-	Amount           base.Wei     `json:"amount"`
-	AssetAddress     base.Address `json:"assetAddress"`
-	BlockNumber      base.Blknum  `json:"blockNumber"`
-	CorrectionId     base.Value   `json:"correctionId"`
-	CorrectingReason string       `json:"correctingReason"`
-	Holder           base.Address `json:"holder"`
-	LogIndex         base.Lognum  `json:"logIndex"`
-	BegBal           base.Wei     `json:"begBal"`
-	StatementId      base.Value   `json:"statementId"`
-	TransactionIndex base.Txnum   `json:"transactionIndex"`
-	EndBal           base.Wei     `json:"endBal"`
-}
-
-// ---------------------------------------------------------
-func (p LedgerEntry) EndBalCalc() *base.Wei {
-	return new(base.Wei).Add(&p.BegBal, &p.Amount)
-}
-
-// ---------------------------------------------------------
-func (p LedgerEntry) Reconciled() (base.Wei, base.Wei, bool, bool) {
-	calc := p.EndBalCalc()
-	checkVal := *new(base.Wei).Add(&p.BegBal, &p.Amount)
-	tentativeDiff := *new(base.Wei).Sub(&checkVal, calc)
-	checkpointDiff := *new(base.Wei).Sub(&checkVal, &p.EndBal)
-
-	checkpointEqual := checkVal.Equal(&p.EndBal)
-	if checkpointEqual {
-		return tentativeDiff, checkpointDiff, true, true
-	}
-
-	tentativeEqual := checkVal.Equal(calc)
-	return tentativeDiff, checkpointDiff, tentativeEqual, false
-}
-
-// ---------------------------------------------------------
-func PrintHeader() {
-	fmt.Println("asset\tholder\tblockNumber\ttransactionIndex\tlogIndex\trowIndex\tcorrectionIndex\tcorrectionReason\tbegBal\tamountNet\tendBalCalc\tendBal\tcheck1\tcheck2\treconciled\tcheckpoint")
-}
-
-// ---------------------------------------------------------
-func (p *LedgerEntry) Model(chain, format string, verbose bool, extraOpts map[string]any) types.Model {
-	_, _, _, _ = chain, format, verbose, extraOpts
-	check1, check2, reconciles, byCheckpoint := p.Reconciled()
-	calc := p.EndBalCalc()
-	fmt.Printf("%s\t%s\t%d\t%d\t%d\t%d\t%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%t\t%t\n",
-		p.AssetAddress.Hex(),
-		p.Holder.Hex(),
-		p.BlockNumber,
-		p.TransactionIndex,
-		p.LogIndex,
-		p.StatementId,
-		p.CorrectionId,
-		p.CorrectingReason,
-		p.BegBal.Text(10),
-		p.Amount.Text(10),
-		calc.Text(10),
-		p.EndBal.Text(10),
-		check1.Text(10),
-		check2.Text(10),
-		reconciles,
-		byCheckpoint,
-	)
-	return types.Model{}
-}
-
-// ---------------------------------------------------------
-type Balance2 struct {
-	BlockNumber  base.Blknum
-	AssetAddress base.Address
-	Holder       base.Address
-	EndBal       base.Wei
-}
+type LedgerEntry = types.Statement
 
 // ---------------------------------------------------------
 type Reconciler struct {
 	conn              *Connection
+	apps              []types.Appearance
 	account           base.Address
 	accountLedger     map[assetHolderKey]base.Wei
 	transfers         map[blockTxKey][]LedgerEntry
@@ -116,11 +44,25 @@ func NewReconciler(addr base.Address) *Reconciler {
 }
 
 // ---------------------------------------------------------
-var (
-	apps                []types.Appearance
-	EndOfBlockSentinel  = base.HexToAddress("0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef")
-	EndOfStreamSentinel = base.HexToAddress("0xbeefdeadbeefdeadbeefdeadbeefdeadbeefdead")
-)
+type Connection struct {
+	balanceMap map[bnAssetHolderKey]base.Wei
+}
+
+// ---------------------------------------------------------
+func NewConnection() *Connection {
+	return &Connection{
+		balanceMap: make(map[bnAssetHolderKey]base.Wei),
+	}
+}
+
+// ---------------------------------------------------------
+func (c *Connection) GetBalanceAtToken(asset base.Address, holder base.Address, bn base.Blknum) (base.Wei, bool) {
+	key := bnAssetHolderKey{BlockNumber: bn, Asset: asset, Holder: holder}
+	if bal, ok := c.balanceMap[key]; ok {
+		return bal, true
+	}
+	return *base.ZeroWei, false
+}
 
 // ---------------------------------------------------------
 func (r *Reconciler) getPostingChannel(app *types.Appearance) <-chan LedgerEntry {
@@ -140,10 +82,17 @@ func (r *Reconciler) getPostingChannel(app *types.Appearance) <-chan LedgerEntry
 // ---------------------------------------------------------
 func (r *Reconciler) correctingEntry(reason string, onChain, currentBal base.Wei, p *LedgerEntry) LedgerEntry {
 	correction := *p
-	correction.Amount = *new(base.Wei).Sub(&onChain, &currentBal)
+	correctionDiff := *new(base.Wei).Sub(&onChain, &currentBal)
 	correction.BegBal = currentBal
 	correction.EndBal = onChain
 	correction.CorrectingReason = reason
+	correction.AmountIn = *base.ZeroWei
+	correction.AmountOut = *base.ZeroWei
+	if correctionDiff.Cmp(base.ZeroWei) > 0 {
+		correction.AmountIn = correctionDiff
+	} else if correctionDiff.Cmp(base.ZeroWei) < 0 {
+		correction.AmountOut = *correctionDiff.Neg()
+	}
 	return correction
 }
 
@@ -221,12 +170,12 @@ func (r *Reconciler) processStream(modelChan chan<- types.Modeler) {
 	go func() {
 		defer close(postingStream)
 		var prevBlock base.Blknum
-		for _, app := range apps {
+		for _, app := range r.apps {
 			bn := base.Blknum(app.BlockNumber)
 			if bn != prevBlock && prevBlock != 0 {
 				postingStream <- LedgerEntry{
 					BlockNumber:  prevBlock,
-					AssetAddress: EndOfBlockSentinel,
+					AssetAddress: base.EndOfBlockSentinel,
 				}
 			}
 			for p := range r.getPostingChannel(&app) {
@@ -237,21 +186,21 @@ func (r *Reconciler) processStream(modelChan chan<- types.Modeler) {
 		if prevBlock != 0 {
 			postingStream <- LedgerEntry{
 				BlockNumber:  prevBlock,
-				AssetAddress: EndOfBlockSentinel,
+				AssetAddress: base.EndOfBlockSentinel,
 			}
 		}
 		postingStream <- LedgerEntry{
-			AssetAddress: EndOfStreamSentinel,
+			AssetAddress: base.EndOfStreamSentinel,
 		}
 	}()
 
 	var postings []LedgerEntry
 	for posting := range postingStream {
 		switch posting.AssetAddress {
-		case EndOfBlockSentinel:
+		case base.EndOfBlockSentinel:
 			r.flushBlock(postings, modelChan)
 			postings = nil
-		case EndOfStreamSentinel:
+		case base.EndOfStreamSentinel:
 			if len(postings) > 0 {
 				r.flushBlock(postings, modelChan)
 			}
@@ -259,26 +208,6 @@ func (r *Reconciler) processStream(modelChan chan<- types.Modeler) {
 		default:
 			postings = append(postings, posting)
 		}
-	}
-}
-
-// ---------------------------------------------------------
-func main() {
-	if len(os.Args) < 2 {
-		os.Args = append(os.Args, "0xf")
-	}
-
-	r := NewReconciler(base.HexToAddress(os.Args[1]))
-
-	modelChan := make(chan types.Modeler, 1000)
-	go func() {
-		defer close(modelChan)
-		r.processStream(modelChan)
-	}()
-
-	PrintHeader()
-	for p := range modelChan {
-		p.Model("mainnet", "text", false, nil)
 	}
 }
 
@@ -298,7 +227,7 @@ func (r *Reconciler) initData() {
 		if strings.HasPrefix(record[0], "#") {
 			continue
 		}
-		apps = append(apps, types.Appearance{
+		r.apps = append(r.apps, types.Appearance{
 			BlockNumber:      uint32(base.MustParseInt64(record[0])),
 			TransactionIndex: uint32(base.MustParseInt64(record[1])),
 		})
@@ -314,7 +243,7 @@ func (r *Reconciler) initData() {
 		if strings.HasPrefix(record[0], "#") {
 			continue
 		}
-		b := Balance2{
+		b := LedgerEntry{
 			BlockNumber:  base.Blknum(base.MustParseUint64(record[0])),
 			AssetAddress: base.HexToAddress(record[1]),
 			Holder:       base.HexToAddress(record[2]),
@@ -335,45 +264,29 @@ func (r *Reconciler) initData() {
 		if strings.HasPrefix(record[0], "#") {
 			continue
 		}
+		amt := base.NewWeiStr(record[5])
 		p := LedgerEntry{
 			BlockNumber:      base.Blknum(base.MustParseUint64(record[0])),
 			TransactionIndex: base.Txnum(base.MustParseUint64(record[1])),
 			LogIndex:         base.Lognum(base.MustParseUint64(record[2])),
 			AssetAddress:     base.HexToAddress(record[3]),
+			AmountIn:         *base.ZeroWei,
+			AmountOut:        *base.ZeroWei,
 			Holder:           base.HexToAddress(record[4]),
-			Amount:           *base.NewWeiStr(record[5]),
+		}
+		if amt.Cmp(base.ZeroWei) > 0 {
+			p.AmountIn = *amt
+		} else if amt.Cmp(base.ZeroWei) < 0 {
+			p.AmountOut = *amt.Neg()
 		}
 		p.EndBal, _ = r.conn.GetBalanceAtToken(p.AssetAddress, p.Holder, p.BlockNumber)
 
 		key := blockTxKey{BlockNumber: p.BlockNumber, TransactionIndex: p.TransactionIndex}
 		r.transfers[key] = append(r.transfers[key], p)
 	}
-
 	if firstBlock := os.Getenv("FIRST_BLOCK"); firstBlock != "" {
 		r.hasStartBlock = true
 	}
-}
-
-// ---------------------------------------------------------
-// Connection provides on-chain balance lookups
-type Connection struct {
-	balanceMap map[bnAssetHolderKey]base.Wei
-}
-
-// ---------------------------------------------------------
-func NewConnection() *Connection {
-	return &Connection{
-		balanceMap: make(map[bnAssetHolderKey]base.Wei),
-	}
-}
-
-// ---------------------------------------------------------
-func (c *Connection) GetBalanceAtToken(asset base.Address, holder base.Address, bn base.Blknum) (base.Wei, bool) {
-	key := bnAssetHolderKey{BlockNumber: bn, Asset: asset, Holder: holder}
-	if bal, ok := c.balanceMap[key]; ok {
-		return bal, true
-	}
-	return *base.ZeroWei, false
 }
 
 // ---------------------------------------------------------
@@ -388,8 +301,33 @@ type assetHolderKey struct {
 	Holder base.Address
 }
 
+// ---------------------------------------------------------
 type bnAssetHolderKey struct {
 	BlockNumber base.Blknum
 	Asset       base.Address
 	Holder      base.Address
+}
+
+// ---------------------------------------------------------
+func main() {
+	if len(os.Args) < 2 {
+		os.Args = append(os.Args, "0xf")
+	}
+
+	r := NewReconciler(base.HexToAddress(os.Args[1]))
+
+	modelChan := make(chan types.Modeler, 1000)
+	go func() {
+		defer close(modelChan)
+		r.processStream(modelChan)
+	}()
+
+	extraOpts := map[string]any{
+		"accounting": true,
+	}
+
+	types.PrintHeader()
+	for p := range modelChan {
+		p.Model("mainnet", "text", false, extraOpts)
+	}
 }
