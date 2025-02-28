@@ -14,32 +14,32 @@ import (
 
 // ---------------------------------------------------------
 type LedgerEntry struct {
-	Holder           base.Address
-	StatementId      int
-	CorrectionId     int
-	CorrectionReason string
-	Opening          base.Wei
-	Amount           base.Wei
-	Verified         base.Wei
+	Amount           base.Wei     `json:"amount"`
 	AssetAddress     base.Address `json:"assetAddress"`
 	BlockNumber      base.Blknum  `json:"blockNumber"`
+	CorrectionId     base.Value   `json:"correctionId"`
+	CorrectingReason string       `json:"correctingReason"`
+	Holder           base.Address `json:"holder"`
 	LogIndex         base.Lognum  `json:"logIndex"`
+	BegBal           base.Wei     `json:"begBal"`
+	StatementId      base.Value   `json:"statementId"`
 	TransactionIndex base.Txnum   `json:"transactionIndex"`
+	EndBal           base.Wei     `json:"endBal"`
 }
 
 // ---------------------------------------------------------
 func (p LedgerEntry) Calculated() base.Wei {
-	return *new(base.Wei).Add(&p.Opening, &p.Amount)
+	return *new(base.Wei).Add(&p.BegBal, &p.Amount)
 }
 
 // ---------------------------------------------------------
 func (p LedgerEntry) Reconciled() (base.Wei, base.Wei, bool, bool) {
 	calc := p.Calculated()
-	checkVal := *new(base.Wei).Add(&p.Opening, &p.Amount)
+	checkVal := *new(base.Wei).Add(&p.BegBal, &p.Amount)
 	tentativeDiff := *new(base.Wei).Sub(&checkVal, &calc)
-	checkpointDiff := *new(base.Wei).Sub(&checkVal, &p.Verified)
+	checkpointDiff := *new(base.Wei).Sub(&checkVal, &p.EndBal)
 
-	checkpointEqual := checkVal.Equal(&p.Verified)
+	checkpointEqual := checkVal.Equal(&p.EndBal)
 	if checkpointEqual {
 		return tentativeDiff, checkpointDiff, true, true
 	}
@@ -66,11 +66,11 @@ func (p *LedgerEntry) Model(chain, format string, verbose bool, extraOpts map[st
 		p.LogIndex,
 		p.StatementId,
 		p.CorrectionId,
-		p.CorrectionReason,
-		p.Opening.Text(10),
+		p.CorrectingReason,
+		p.BegBal.Text(10),
 		p.Amount.Text(10),
 		calc.Text(10),
-		p.Verified.Text(10),
+		p.EndBal.Text(10),
 		check1.Text(10),
 		check2.Text(10),
 		reconciles,
@@ -81,10 +81,10 @@ func (p *LedgerEntry) Model(chain, format string, verbose bool, extraOpts map[st
 
 // ---------------------------------------------------------
 type Balance2 struct {
-	BlockNumber base.Blknum
-	Asset       base.Address
-	Holder      base.Address
-	Balance     base.Wei
+	BlockNumber  base.Blknum
+	AssetAddress base.Address
+	Holder       base.Address
+	EndBal       base.Wei
 }
 
 // ---------------------------------------------------------
@@ -93,8 +93,8 @@ type Reconciler struct {
 	account           base.Address
 	accountLedger     map[assetHolderKey]base.Wei
 	transfers         map[blockTxKey][]LedgerEntry
-	correctionCounter int
-	entryCounter      int
+	correctionCounter base.Value
+	entryCounter      base.Value
 	hasStartBlock     bool
 	ledgerAssets      map[base.Address]bool
 }
@@ -141,9 +141,9 @@ func (r *Reconciler) getPostingChannel(app *types.Appearance) <-chan LedgerEntry
 func (r *Reconciler) correctingEntry(reason string, onChain, currentBal base.Wei, p *LedgerEntry) LedgerEntry {
 	correction := *p
 	correction.Amount = *new(base.Wei).Sub(&onChain, &currentBal)
-	correction.Opening = currentBal
-	correction.Verified = onChain
-	correction.CorrectionReason = reason
+	correction.BegBal = currentBal
+	correction.EndBal = onChain
+	correction.CorrectingReason = reason
 	return correction
 }
 
@@ -174,7 +174,7 @@ func (r *Reconciler) flushBlock(postings []LedgerEntry, modelChan chan<- types.M
 			blockProcessedAssets[p.AssetAddress] = true
 		}
 
-		p.Opening = r.accountLedger[key]
+		p.BegBal = r.accountLedger[key]
 		r.accountLedger[key] = p.Calculated()
 		r.entryCounter++
 		p.StatementId = r.entryCounter
@@ -188,8 +188,8 @@ func (r *Reconciler) flushBlock(postings []LedgerEntry, modelChan chan<- types.M
 		p := postings[idx]
 		key := assetHolderKey{Asset: p.AssetAddress, Holder: p.Holder}
 		currentBal := r.accountLedger[key]
-		if !p.Verified.Equal(&currentBal) {
-			correctingEntry := r.correctingEntry("imb", p.Verified, currentBal, &p)
+		if !p.EndBal.Equal(&currentBal) {
+			correctingEntry := r.correctingEntry("imb", p.EndBal, currentBal, &p)
 			corrections = append(corrections, correctingEntry)
 		}
 	}
@@ -211,7 +211,7 @@ func (r *Reconciler) flushBlock(postings []LedgerEntry, modelChan chan<- types.M
 		correction.StatementId = r.entryCounter
 		modelChan <- &correction
 		key := assetHolderKey{Asset: correction.AssetAddress, Holder: correction.Holder}
-		r.accountLedger[key] = correction.Verified
+		r.accountLedger[key] = correction.EndBal
 	}
 }
 
@@ -315,14 +315,14 @@ func (r *Reconciler) initData() {
 			continue
 		}
 		b := Balance2{
-			BlockNumber: base.Blknum(base.MustParseUint64(record[0])),
-			Asset:       base.HexToAddress(record[1]),
-			Holder:      base.HexToAddress(record[2]),
-			Balance:     *base.NewWeiStr(record[3]),
+			BlockNumber:  base.Blknum(base.MustParseUint64(record[0])),
+			AssetAddress: base.HexToAddress(record[1]),
+			Holder:       base.HexToAddress(record[2]),
+			EndBal:       *base.NewWeiStr(record[3]),
 		}
 
-		key := bnAssetHolderKey{BlockNumber: b.BlockNumber, Asset: b.Asset, Holder: b.Holder}
-		r.conn.balanceMap[key] = b.Balance
+		key := bnAssetHolderKey{BlockNumber: b.BlockNumber, Asset: b.AssetAddress, Holder: b.Holder}
+		r.conn.balanceMap[key] = b.EndBal
 	}
 
 	// blockNumber,transactionIndex,logIndex,assetAddress,accountedFor,amountNet,endBal
@@ -343,7 +343,7 @@ func (r *Reconciler) initData() {
 			Holder:           base.HexToAddress(record[4]),
 			Amount:           *base.NewWeiStr(record[5]),
 		}
-		p.Verified, _ = r.conn.GetBalanceAtToken(p.AssetAddress, p.Holder, p.BlockNumber)
+		p.EndBal, _ = r.conn.GetBalanceAtToken(p.AssetAddress, p.Holder, p.BlockNumber)
 
 		key := blockTxKey{BlockNumber: p.BlockNumber, TransactionIndex: p.TransactionIndex}
 		r.transfers[key] = append(r.transfers[key], p)
