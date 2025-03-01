@@ -22,7 +22,7 @@ test:
 	@cd tests && ./run_all.sh && cd -
 
 data:
-	@make app
+	@make every
 	@cd tests && ./update_data.sh && cd -
 
 #-------------------------------------------------

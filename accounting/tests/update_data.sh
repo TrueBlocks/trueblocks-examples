@@ -74,4 +74,11 @@ chifra export 0x05a56e2d52c817161883f50c441c3228cfe54d9f --accounting --transfer
 # echo "# chifra export 0x08166f02313feae18bb044e7877c808b55b5bf58 --transfers --last_block 4000000 --fmt csv" >transfers.csv
 # chifra export 0x08166f02313feae18bb044e7877c808b55b5bf58 --transfers --last_block 4000000 --fmt csv --append --output transfers.csv
 
+# Compare to gold tests
+CURRENT_DIR=$(pwd)
+RELATIVE_PATH=${CURRENT_DIR#*/tests/}
+DIR1="$CURRENT_DIR"
+DIR2="/Users/jrush/Development.2/trueblocks-core/examples/accounting/tests/$RELATIVE_PATH"
+diff -r "$DIR1" "$DIR2"
+
 cd ..
