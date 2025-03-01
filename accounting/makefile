@@ -23,7 +23,7 @@ test:
 
 data:
 	@make app
-	@cd tests && source xxx && cd -
+	@cd tests && ./update_data.sh && cd -
 
 #-------------------------------------------------
 clean:
