@@ -2,12 +2,14 @@ package main
 
 import (
 	"encoding/csv"
+	"fmt"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
 
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/base"
+	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/logger"
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/types"
 )
 
@@ -222,15 +224,22 @@ func (r *Reconciler) initData() {
 	appsFile, _ := os.Open(appsFn)
 	defer appsFile.Close()
 	appsReader := csv.NewReader(appsFile)
-	appsRecords, _ := appsReader.ReadAll()
-	for _, record := range appsRecords[1:] {
-		if strings.HasPrefix(record[0], "#") {
-			continue
+	appsReader.Comment = '#'
+	if appsRecords, err := appsReader.ReadAll(); err != nil {
+		fmt.Println("Problem with data file:", appsFn)
+		logger.Fatal(err)
+	} else if len(appsRecords) == 0 {
+		logger.Fatal("no transfers")
+	} else {
+		for _, record := range appsRecords[1:] {
+			if strings.HasPrefix(record[0], "#") {
+				continue
+			}
+			r.apps = append(r.apps, types.Appearance{
+				BlockNumber:      uint32(base.MustParseInt64(record[0])),
+				TransactionIndex: uint32(base.MustParseInt64(record[1])),
+			})
 		}
-		r.apps = append(r.apps, types.Appearance{
-			BlockNumber:      uint32(base.MustParseInt64(record[0])),
-			TransactionIndex: uint32(base.MustParseInt64(record[1])),
-		})
 	}
 
 	// blockNumber,assetAddress,accountedFor,endBal
@@ -238,20 +247,27 @@ func (r *Reconciler) initData() {
 	balFile, _ := os.Open(balFn)
 	defer balFile.Close()
 	balReader := csv.NewReader(balFile)
-	balRecords, _ := balReader.ReadAll()
-	for _, record := range balRecords[1:] {
-		if strings.HasPrefix(record[0], "#") {
-			continue
-		}
-		b := LedgerEntry{
-			BlockNumber:  base.Blknum(base.MustParseUint64(record[0])),
-			AssetAddress: base.HexToAddress(record[1]),
-			Holder:       base.HexToAddress(record[2]),
-			EndBal:       *base.NewWeiStr(record[3]),
-		}
+	balReader.Comment = '#'
+	if balRecords, err := balReader.ReadAll(); err != nil {
+		fmt.Println("Problem with data file:", balFn)
+		logger.Fatal(err)
+	} else if len(balRecords) == 0 {
+		logger.Fatal("no transfers")
+	} else {
+		for _, record := range balRecords[1:] {
+			if strings.HasPrefix(record[0], "#") {
+				continue
+			}
+			b := LedgerEntry{
+				BlockNumber:  base.Blknum(base.MustParseUint64(record[0])),
+				AssetAddress: base.HexToAddress(record[1]),
+				Holder:       base.HexToAddress(record[2]),
+				EndBal:       *base.NewWeiStr(record[3]),
+			}
 
-		key := bnAssetHolderKey{BlockNumber: b.BlockNumber, Asset: b.AssetAddress, Holder: b.Holder}
-		r.conn.balanceMap[key] = b.EndBal
+			key := bnAssetHolderKey{BlockNumber: b.BlockNumber, Asset: b.AssetAddress, Holder: b.Holder}
+			r.conn.balanceMap[key] = b.EndBal
+		}
 	}
 
 	// blockNumber,transactionIndex,logIndex,assetAddress,accountedFor,amountNet,endBal
@@ -259,33 +275,40 @@ func (r *Reconciler) initData() {
 	transfersFile, _ := os.Open(transfersFn)
 	defer transfersFile.Close()
 	transfersReader := csv.NewReader(transfersFile)
-	transfersRecords, _ := transfersReader.ReadAll()
-	for _, record := range transfersRecords[1:] {
-		if strings.HasPrefix(record[0], "#") {
-			continue
-		}
-		amt := base.NewWeiStr(record[5])
-		p := LedgerEntry{
-			BlockNumber:      base.Blknum(base.MustParseUint64(record[0])),
-			TransactionIndex: base.Txnum(base.MustParseUint64(record[1])),
-			LogIndex:         base.Lognum(base.MustParseUint64(record[2])),
-			AssetAddress:     base.HexToAddress(record[3]),
-			AmountIn:         *base.ZeroWei,
-			AmountOut:        *base.ZeroWei,
-			Holder:           base.HexToAddress(record[4]),
-		}
-		if amt.Cmp(base.ZeroWei) > 0 {
-			p.AmountIn = *amt
-		} else if amt.Cmp(base.ZeroWei) < 0 {
-			p.AmountOut = *amt.Neg()
-		}
-		p.EndBal, _ = r.conn.GetBalanceAtToken(p.AssetAddress, p.Holder, p.BlockNumber)
+	transfersReader.Comment = '#'
+	if transfersRecords, err := transfersReader.ReadAll(); err != nil {
+		fmt.Println("Problem with data file:", transfersFn)
+		logger.Fatal(err)
+	} else if len(transfersRecords) == 0 {
+		logger.Fatal("no transfers")
+	} else {
+		for _, record := range transfersRecords[1:] {
+			if strings.HasPrefix(record[0], "#") {
+				continue
+			}
+			amt := base.NewWeiStr(record[5])
+			p := LedgerEntry{
+				BlockNumber:      base.Blknum(base.MustParseUint64(record[0])),
+				TransactionIndex: base.Txnum(base.MustParseUint64(record[1])),
+				LogIndex:         base.Lognum(base.MustParseUint64(record[2])),
+				AssetAddress:     base.HexToAddress(record[3]),
+				AmountIn:         *base.ZeroWei,
+				AmountOut:        *base.ZeroWei,
+				Holder:           base.HexToAddress(record[4]),
+			}
+			if amt.Cmp(base.ZeroWei) > 0 {
+				p.AmountIn = *amt
+			} else if amt.Cmp(base.ZeroWei) < 0 {
+				p.AmountOut = *amt.Neg()
+			}
+			p.EndBal, _ = r.conn.GetBalanceAtToken(p.AssetAddress, p.Holder, p.BlockNumber)
 
-		key := blockTxKey{BlockNumber: p.BlockNumber, TransactionIndex: p.TransactionIndex}
-		r.transfers[key] = append(r.transfers[key], p)
-	}
-	if firstBlock := os.Getenv("FIRST_BLOCK"); firstBlock != "" {
-		r.hasStartBlock = true
+			key := blockTxKey{BlockNumber: p.BlockNumber, TransactionIndex: p.TransactionIndex}
+			r.transfers[key] = append(r.transfers[key], p)
+		}
+		if firstBlock := os.Getenv("FIRST_BLOCK"); firstBlock != "" {
+			r.hasStartBlock = true
+		}
 	}
 }
 

@@ -21,6 +21,10 @@ test:
 	@make app
 	@cd tests && ./run_all.sh && cd -
 
+data:
+	@make app
+	@cd tests && source xxx && cd -
+
 #-------------------------------------------------
 clean:
 	-@$(RM) -f $(dest)
