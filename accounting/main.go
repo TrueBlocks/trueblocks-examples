@@ -58,9 +58,9 @@ func NewConnection() *Connection {
 }
 
 // ---------------------------------------------------------
-func (c *Connection) GetBalanceAtToken(asset base.Address, holder base.Address, bn base.Blknum) (base.Wei, bool) {
+func (conn *Connection) GetBalanceAtToken(asset base.Address, holder base.Address, bn base.Blknum) (base.Wei, bool) {
 	key := bnAssetHolderKey{BlockNumber: bn, Asset: asset, Holder: holder}
-	if bal, ok := c.balanceMap[key]; ok {
+	if bal, ok := conn.balanceMap[key]; ok {
 		return bal, true
 	}
 	return *base.ZeroWei, false
