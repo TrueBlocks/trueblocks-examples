@@ -82,10 +82,10 @@ func (r *Reconciler) getPostingChannel(app *types.Appearance) <-chan LedgerEntry
 }
 
 // ---------------------------------------------------------
-func (r *Reconciler) correctingEntry(reason string, onChain, currentBal base.Wei, p *LedgerEntry) LedgerEntry {
+func (r *Reconciler) correctingEntry(reason string, onChain, curBal base.Wei, p *LedgerEntry) LedgerEntry {
 	correction := *p
-	correctionDiff := *new(base.Wei).Sub(&onChain, &currentBal)
-	correction.BegBal = currentBal
+	correctionDiff := *new(base.Wei).Sub(&onChain, &curBal)
+	correction.BegBal = curBal
 	correction.EndBal = onChain
 	correction.CorrectingReason = reason
 	correction.AmountIn = *base.ZeroWei
@@ -112,9 +112,9 @@ func (r *Reconciler) flushBlock(postings []LedgerEntry, modelChan chan<- types.M
 				r.ledgerAssets[p.AssetAddress] = true
 			}
 			if onChain, ok := r.conn.GetBalanceAtToken(p.AssetAddress, p.Holder, p.BlockNumber-1); ok {
-				currentBal := r.accountLedger[key]
-				if !onChain.Equal(&currentBal) {
-					correctingEntry := r.correctingEntry("mis", onChain, currentBal, &p)
+				curBal := r.accountLedger[key]
+				if !onChain.Equal(&curBal) {
+					correctingEntry := r.correctingEntry("mis", onChain, curBal, &p)
 					r.correctionCounter++
 					correctingEntry.CorrectionId = r.correctionCounter
 					r.entryCounter++
@@ -138,9 +138,9 @@ func (r *Reconciler) flushBlock(postings []LedgerEntry, modelChan chan<- types.M
 	for _, idx := range assetLastSeen {
 		p := postings[idx]
 		key := assetHolderKey{Asset: p.AssetAddress, Holder: p.Holder}
-		currentBal := r.accountLedger[key]
-		if !p.EndBal.Equal(&currentBal) {
-			correctingEntry := r.correctingEntry("imb", p.EndBal, currentBal, &p)
+		curBal := r.accountLedger[key]
+		if !p.EndBal.Equal(&curBal) {
+			correctingEntry := r.correctingEntry("imb", p.EndBal, curBal, &p)
 			corrections = append(corrections, correctingEntry)
 		}
 	}
