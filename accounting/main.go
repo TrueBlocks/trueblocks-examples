@@ -9,12 +9,10 @@ import (
 	"strings"
 
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/base"
+	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/ledger3"
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/logger"
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/types"
 )
-
-// ---------------------------------------------------------
-type LedgerEntry = types.Statement
 
 // ---------------------------------------------------------
 type Reconciler struct {
@@ -22,7 +20,7 @@ type Reconciler struct {
 	apps              []types.Appearance
 	account           base.Address
 	accountLedger     map[assetHolderKey]base.Wei
-	transfers         map[blockTxKey][]LedgerEntry
+	transfers         map[blockTxKey][]ledger3.AssetTransfer
 	correctionCounter base.Value
 	entryCounter      base.Value
 	hasStartBlock     bool
@@ -34,7 +32,7 @@ func NewReconciler(addr base.Address) *Reconciler {
 	r := &Reconciler{
 		account:       addr,
 		accountLedger: make(map[assetHolderKey]base.Wei),
-		transfers:     make(map[blockTxKey][]LedgerEntry),
+		transfers:     make(map[blockTxKey][]ledger3.AssetTransfer),
 		conn:          NewConnection(),
 		hasStartBlock: false,
 		ledgerAssets:  make(map[base.Address]bool),
@@ -67,8 +65,8 @@ func (conn *Connection) GetBalanceAtToken(asset base.Address, holder base.Addres
 }
 
 // ---------------------------------------------------------
-func (r *Reconciler) getPostingChannel(app *types.Appearance) <-chan LedgerEntry {
-	ch := make(chan LedgerEntry)
+func (r *Reconciler) getPostingChannel(app *types.Appearance) <-chan ledger3.AssetTransfer {
+	ch := make(chan ledger3.AssetTransfer)
 	go func() {
 		defer close(ch)
 		key := blockTxKey{BlockNumber: base.Blknum(app.BlockNumber), TransactionIndex: base.Txnum(app.TransactionIndex)}
@@ -82,7 +80,7 @@ func (r *Reconciler) getPostingChannel(app *types.Appearance) <-chan LedgerEntry
 }
 
 // ---------------------------------------------------------
-func (r *Reconciler) correctingEntry(reason string, onChain, curBal base.Wei, p *LedgerEntry) LedgerEntry {
+func (r *Reconciler) correctingEntry(reason string, onChain, curBal base.Wei, p *ledger3.AssetTransfer) ledger3.AssetTransfer {
 	correction := *p
 	correctionDiff := *new(base.Wei).Sub(&onChain, &curBal)
 	correction.BegBal = curBal
@@ -99,7 +97,7 @@ func (r *Reconciler) correctingEntry(reason string, onChain, curBal base.Wei, p 
 }
 
 // ---------------------------------------------------------
-func (r *Reconciler) flushBlock(postings []LedgerEntry, modelChan chan<- types.Modeler) {
+func (r *Reconciler) flushBlock(postings []ledger3.AssetTransfer, modelChan chan<- types.Modeler) {
 	blockProcessedAssets := make(map[base.Address]bool)
 	assetLastSeen := make(map[base.Address]int)
 	for i, p := range postings {
@@ -134,7 +132,7 @@ func (r *Reconciler) flushBlock(postings []LedgerEntry, modelChan chan<- types.M
 		modelChan <- &p
 	}
 
-	var corrections []LedgerEntry
+	var corrections []ledger3.AssetTransfer
 	for _, idx := range assetLastSeen {
 		p := postings[idx]
 		key := assetHolderKey{Asset: p.AssetAddress, Holder: p.Holder}
@@ -168,14 +166,14 @@ func (r *Reconciler) flushBlock(postings []LedgerEntry, modelChan chan<- types.M
 
 // ---------------------------------------------------------
 func (r *Reconciler) processStream(modelChan chan<- types.Modeler) {
-	postingStream := make(chan LedgerEntry, 100)
+	postingStream := make(chan ledger3.AssetTransfer, 100)
 	go func() {
 		defer close(postingStream)
 		var prevBlock base.Blknum
 		for _, app := range r.apps {
 			bn := base.Blknum(app.BlockNumber)
 			if bn != prevBlock && prevBlock != 0 {
-				postingStream <- LedgerEntry{
+				postingStream <- ledger3.AssetTransfer{
 					BlockNumber:  prevBlock,
 					AssetAddress: base.EndOfBlockSentinel,
 				}
@@ -186,17 +184,17 @@ func (r *Reconciler) processStream(modelChan chan<- types.Modeler) {
 			prevBlock = bn
 		}
 		if prevBlock != 0 {
-			postingStream <- LedgerEntry{
+			postingStream <- ledger3.AssetTransfer{
 				BlockNumber:  prevBlock,
 				AssetAddress: base.EndOfBlockSentinel,
 			}
 		}
-		postingStream <- LedgerEntry{
+		postingStream <- ledger3.AssetTransfer{
 			AssetAddress: base.EndOfStreamSentinel,
 		}
 	}()
 
-	var postings []LedgerEntry
+	var postings []ledger3.AssetTransfer
 	for posting := range postingStream {
 		switch posting.AssetAddress {
 		case base.EndOfBlockSentinel:
@@ -258,7 +256,7 @@ func (r *Reconciler) initData() {
 			if strings.HasPrefix(record[0], "#") {
 				continue
 			}
-			b := LedgerEntry{
+			b := ledger3.AssetTransfer{
 				BlockNumber:  base.Blknum(base.MustParseUint64(record[0])),
 				AssetAddress: base.HexToAddress(record[1]),
 				Holder:       base.HexToAddress(record[2]),
@@ -287,7 +285,7 @@ func (r *Reconciler) initData() {
 				continue
 			}
 			amt := base.NewWeiStr(record[5])
-			p := LedgerEntry{
+			p := ledger3.AssetTransfer{
 				BlockNumber:      base.Blknum(base.MustParseUint64(record[0])),
 				TransactionIndex: base.Txnum(base.MustParseUint64(record[1])),
 				LogIndex:         base.Lognum(base.MustParseUint64(record[2])),
