@@ -13,7 +13,7 @@ func main() {
 		os.Args = append(os.Args, "0xf")
 	}
 
-	r := ledger3.NewReconciler3(base.HexToAddress(os.Args[1]))
+	r := ledger3.NewReconciler3("mainnet", base.HexToAddress(os.Args[1]))
 
 	modelChan := make(chan types.Modeler, 1000)
 	go func() {
