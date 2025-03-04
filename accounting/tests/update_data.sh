@@ -43,8 +43,8 @@ echo "# chifra export 0xec3ef464bf821c3b10a18adf9ac7177a628e87cc --accounting --
 chifra export 0xec3ef464bf821c3b10a18adf9ac7177a628e87cc --accounting --transfers --first_block 7005600 --last_block 7005780 --fmt csv --append --output transfers.csv
 
 cd ../acctExport_transfer_token_ibt_2
-echo "# chifra export 0xf503017d7baf7fbc0fff7492b751025c6a78179b --accounting --transfers --first_block 12704455 --last_block 12705893 --max_records 9 --fmt csv" >transfers.csv
-chifra export 0xf503017d7baf7fbc0fff7492b751025c6a78179b --accounting --transfers --first_block 12704455 --last_block 12705893 --max_records 9 --fmt csv --append --output transfers.csv
+echo "# chifra export 0xf503017d7baf7fbc0fff7492b751025c6a78179b --accounting --transfers --first_block 12704455 --last_block 12705893 --fmt csv" >transfers.csv
+chifra export 0xf503017d7baf7fbc0fff7492b751025c6a78179b --accounting --transfers --first_block 12704455 --last_block 12705893 --fmt csv --append --output transfers.csv
 
 cd ../acctExport_transfer_tributes
 echo "# chifra export 0x868b8fd259abfcfdf9634c343593b34ef359641d --accounting --transfers --first_block 8769018 --last_block 8769053 --asset 0x0ba45a8b5d5575935b8158a88c631e9f9c95a2e5 --fmt csv" >transfers.csv
