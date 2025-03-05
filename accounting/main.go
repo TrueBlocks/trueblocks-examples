@@ -6,9 +6,12 @@ import (
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/base"
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/filter"
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/ledger3"
+	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/ledger4"
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/logger"
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/monitor"
+	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/rpc"
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/types"
+	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/walk"
 )
 
 func main() {
@@ -25,7 +28,19 @@ func main() {
 	}
 
 	mon := monitorArray[0]
-	r := ledger3.NewReconciler3("mainnet", mon.Address)
+	conn := rpc.NewConnection("mainnet", false, map[walk.CacheType]bool{})
+	ledgerOpts := &ledger4.ReconcilerOptions{
+		Connection:   conn,
+		AccountFor:   mon.Address,
+		FirstBlock:   0,
+		LastBlock:    base.Blknum(base.NOPOS),
+		AsEther:      false,
+		TestMode:     false,
+		UseTraces:    false,
+		Reversed:     false,
+		AssetFilters: []base.Address{},
+	}
+	r := ledger3.NewReconciler3(ledgerOpts)
 	modelChan := make(chan types.Modeler, 1000)
 	go func() {
 		defer close(modelChan)
