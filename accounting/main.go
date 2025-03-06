@@ -40,7 +40,9 @@ func main() {
 		Reversed:     false,
 		AssetFilters: []base.Address{},
 	}
-	r := ledger3.NewReconciler3(ledgerOpts)
+	r := ledger3.NewReconciler(ledgerOpts)
+	r.InitData()
+	
 	modelChan := make(chan types.Modeler, 1000)
 	go func() {
 		defer close(modelChan)
