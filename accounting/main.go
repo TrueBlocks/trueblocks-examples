@@ -5,8 +5,8 @@ import (
 
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/base"
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/filter"
+	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/ledger10"
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/ledger3"
-	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/ledger4"
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/logger"
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/monitor"
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/rpc"
@@ -29,7 +29,7 @@ func main() {
 
 	mon := monitorArray[0]
 	conn := rpc.NewConnection("mainnet", false, map[walk.CacheType]bool{})
-	ledgerOpts := &ledger4.ReconcilerOptions{
+	ledgerOpts := &ledger10.ReconcilerOptions{
 		Connection:   conn,
 		AccountFor:   mon.Address,
 		FirstBlock:   0,
@@ -42,7 +42,7 @@ func main() {
 	}
 	r := ledger3.NewReconciler(ledgerOpts)
 	r.InitData()
-	
+
 	modelChan := make(chan types.Modeler, 1000)
 	go func() {
 		defer close(modelChan)

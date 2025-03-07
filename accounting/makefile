@@ -23,7 +23,7 @@ test:
 
 data:
 	@make every
-	@cd tests && ./update_data.sh && cd -
+	@cd tests && go run update_data.go && cd -
 
 #-------------------------------------------------
 clean:
