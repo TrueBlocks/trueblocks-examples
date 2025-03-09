@@ -16,7 +16,7 @@ import (
 
 func main() {
 	if len(os.Args) < 2 {
-		os.Args = append(os.Args, "0xf")
+		logger.Fatal("usage: accounting <address>")
 	}
 
 	var updater = monitor.NewUpdater("mainnet", true, false, os.Args[1:])
@@ -64,12 +64,10 @@ func main() {
 		}
 	}()
 
-	extraOpts := map[string]any{
-		"accounting": true,
-	}
-
 	types.PrintHeader()
 	for p := range modelChan {
-		p.Model("mainnet", "text", false, extraOpts)
+		p.Model("mainnet", "text", false, map[string]any{
+			"accounting": true,
+		})
 	}
 }

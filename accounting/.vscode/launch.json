@@ -1,0 +1,19 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch main.go",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${file}",
+            "args": [
+                "0x6aed588ca2052ccfc907db8c24df4b7b95a29a5e"
+            ],
+            "env": {
+                "FIRST_BLOCK": "true",
+                "FOLDER": "/Users/jrush/Development/trueblocks-core/examples/accounting/tests/acctExport_accounting_intra_tokens/",
+            }
+        }
+    ]
+}
