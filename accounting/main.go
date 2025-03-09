@@ -4,7 +4,6 @@ import (
 	"os"
 
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/base"
-	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/filter"
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/ledger10"
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/ledger3"
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/logger"
@@ -35,7 +34,6 @@ func main() {
 		FirstBlock:   0,
 		LastBlock:    base.Blknum(base.NOPOS),
 		AsEther:      false,
-		TestMode:     false,
 		UseTraces:    false,
 		Reversed:     false,
 		AssetFilters: []base.Address{},
@@ -46,7 +44,7 @@ func main() {
 	modelChan := make(chan types.Modeler, 1000)
 	go func() {
 		defer close(modelChan)
-		filter := filter.NewFilter(
+		filter := types.NewFilter(
 			false,
 			false,
 			[]string{},
@@ -64,10 +62,8 @@ func main() {
 		}
 	}()
 
-	types.PrintHeader()
+	ledger10.PrintHeader()
 	for p := range modelChan {
-		p.Model("mainnet", "text", false, map[string]any{
-			"accounting": true,
-		})
+		p.Model("mainnet", "text", false, map[string]any{})
 	}
 }
