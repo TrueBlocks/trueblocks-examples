@@ -1,10 +1,11 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/base"
-	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/ledger10"
+	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/ledger1"
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/ledger3"
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/logger"
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/monitor"
@@ -28,7 +29,7 @@ func main() {
 
 	mon := monitorArray[0]
 	conn := rpc.NewConnection("mainnet", false, map[walk.CacheType]bool{})
-	ledgerOpts := &ledger10.ReconcilerOptions{
+	ledgerOpts := &ledger1.ReconcilerOptions{
 		Connection:   conn,
 		AccountFor:   mon.Address,
 		FirstBlock:   0,
@@ -62,8 +63,12 @@ func main() {
 		}
 	}()
 
-	ledger10.PrintHeader()
+	PrintHeader()
 	for p := range modelChan {
 		p.Model("mainnet", "text", false, map[string]any{})
 	}
+}
+
+func PrintHeader() {
+	fmt.Println("asset\tholder\tblockNumber\ttransactionIndex\tlogIndex\trowIndex\tcorrectionIndex\tcorrectionReason\tbegBal\tamountNet\tendBalCalc\tendBal\tcheck1\tcheck2\treconciled\tcheckpoint")
 }
