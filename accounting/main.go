@@ -30,7 +30,6 @@ func main() {
 	mon := monitorArray[0]
 	conn := rpc.NewConnection("mainnet", false, map[walk.CacheType]bool{})
 	ledgerOpts := &ledger1.ReconcilerOptions{
-		Connection:   conn,
 		AccountFor:   mon.Address,
 		FirstBlock:   0,
 		LastBlock:    base.Blknum(base.NOPOS),
@@ -39,7 +38,7 @@ func main() {
 		Reversed:     false,
 		AssetFilters: []base.Address{},
 	}
-	r := ledger3.NewReconciler(ledgerOpts)
+	r := ledger3.NewReconciler(conn, ledgerOpts)
 	r.InitData()
 
 	modelChan := make(chan types.Modeler, 1000)
