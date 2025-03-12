@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/base"
+	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/file"
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/ledger1"
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/ledger3"
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/logger"
@@ -40,6 +41,11 @@ func main() {
 	}
 	r := ledger3.NewReconciler(conn, ledgerOpts)
 	r.InitData()
+
+	contents := file.AsciiFileToLines("transfers.csv")
+	if len(contents) > 0 {
+		fmt.Println(contents[0])
+	}
 
 	modelChan := make(chan types.Modeler, 1000)
 	go func() {
