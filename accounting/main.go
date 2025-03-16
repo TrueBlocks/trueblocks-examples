@@ -6,7 +6,7 @@ import (
 
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/base"
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/file"
-	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/ledger1"
+	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/ledger"
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/ledger3"
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/logger"
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/monitor"
@@ -30,7 +30,7 @@ func main() {
 
 	mon := monitorArray[0]
 	conn := rpc.NewConnection("mainnet", false, map[walk.CacheType]bool{})
-	ledgerOpts := &ledger1.ReconcilerOptions{
+	ledgerOpts := &ledger.ReconcilerOptions{
 		AccountFor:   mon.Address,
 		FirstBlock:   0,
 		LastBlock:    base.Blknum(base.NOPOS),
