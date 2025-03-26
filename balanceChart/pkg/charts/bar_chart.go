@@ -53,7 +53,7 @@ func BarChart(names []types.Name, balances []types.State, labels Labels, fileNam
 	histories := make([]plotter.Values, nAddrs) // a slice of slices of floats
 	for _, bal := range balances {
 		idx := idMap[bal.Address] - 1
-		ff := base.ToEther(&bal.Balance).Float64()
+		ff := base.ToFloat(&bal.Balance).Float64()
 		histories[idx] = append(histories[idx], ff)
 	}
 

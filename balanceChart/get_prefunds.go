@@ -41,7 +41,7 @@ func getPrefunds(nAddrs int, maxAmt float64) ([]types.Name, error) {
 		if len(ret) >= nAddrs {
 			break
 		}
-		if base.ToEther(&name.Prefund).Cmp(base.NewEther(maxAmt)) <= 0 {
+		if base.ToFloat(&name.Prefund).Cmp(base.NewFloat(maxAmt)) <= 0 {
 			name.Name = name.Address.Hex()
 			ret = append(ret, name)
 		}
