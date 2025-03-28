@@ -50,13 +50,13 @@ func compareAppearances(unchained, etherscan []types.Appearance) {
 
 	// min := uint32(0)
 	for _, u := range unchained {
-		// min = base.Max(min, u.BlockNumber)
+		// min = max(min, u.BlockNumber)
 		if u.BlockNumber > 19000000 {
 			unchainedMap[u] = true
 		}
 	}
 	for _, e := range etherscan {
-		// min = base.Min(min, e.BlockNumber)
+		// min = min(min, e.BlockNumber)
 		if e.BlockNumber > 19000000 {
 			etherscanMap[e] = true
 		}
