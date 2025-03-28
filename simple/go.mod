@@ -7,7 +7,7 @@ require github.com/TrueBlocks/trueblocks-sdk/v4 v4.2.0
 
 require (
 	github.com/Microsoft/go-winio v0.6.2 // indirect
-	github.com/TrueBlocks/trueblocks-core/src/apps/chifra v0.0.0-20250131141006-ca15858b0e7c // indirect
+	github.com/TrueBlocks/trueblocks-core/src/apps/chifra v0.0.0-20250328070134-da96eca77299 // indirect
 	github.com/alecthomas/participle/v2 v2.0.0 // indirect
 	github.com/benbjohnson/clock v1.3.0 // indirect
 	github.com/bits-and-blooms/bitset v1.13.0 // indirect
