@@ -5,12 +5,14 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"sort"
 	"strings"
 	"text/tabwriter"
 	"time"
 
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/base"
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/colors"
+	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/file"
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/logger"
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/tslib"
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/types"
@@ -45,7 +47,11 @@ func main() {
 	fmt.Fprintf(w, colors.Yellow+"\t------\t---------\t-----------\t---------\t----\t----\t------"+colors.Off+"\n")
 
 	modes := []string{"latest", "stage", "final"}
-	chains := []string{"mainnet", "sepolia", "gnosis", "optimism"}
+	chains, err := getChains()
+	if err != nil {
+		logger.Error("error getting chains:", err)
+		os.Exit(1)
+	}
 	for i, mode := range modes {
 		if i > 0 {
 			fmt.Fprintf(w, colors.Yellow+"\t\t\t\t\t\t\t"+colors.Off+"\n")
@@ -137,4 +143,27 @@ func formatDuration(duration time.Duration) string {
 	default:
 		return fmt.Sprintf("%5.2fs", seconds)
 	}
+}
+
+func getChains() ([]string, error) {
+	chainsFn := "./chains.csv"
+	if !file.FileExists(chainsFn) {
+		return nil, fmt.Errorf("chains file does not exist")
+	}
+
+	chains := file.AsciiFileToLines(chainsFn)
+	uniqueChains := make(map[string]bool)
+	for _, chain := range chains {
+		if !strings.HasPrefix(chain, "#") {
+			uniqueChains[chain] = true
+		}
+	}
+
+	result := make([]string, 0, len(uniqueChains))
+	for chain := range uniqueChains {
+		result = append(result, chain)
+	}
+	sort.Strings(chains)
+
+	return result, nil
 }
