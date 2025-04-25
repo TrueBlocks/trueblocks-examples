@@ -4,7 +4,6 @@ import (
 	"image/color"
 	"math"
 
-	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/logger"
 	"gonum.org/v1/plot"
 	"gonum.org/v1/plot/vg"
 	"gonum.org/v1/plot/vg/draw"
@@ -17,12 +16,12 @@ type Labels struct {
 }
 
 func getPlot(labels Labels) (*plot.Plot, error) {
-	p, err := plot.New()
-	if err != nil {
-		logger.Panic(err)
-	}
+	p := plot.New()
+	// if err != nil {
+	// 	logger.Panic(err)
+	// }
 
-	p.Title.Font.Size = vg.Points(18)
+	// p.Title.Font.Size = vg.Points(18)
 	p.Title.Padding = vg.Points(10)
 	p.Title.Text = labels.Title
 
