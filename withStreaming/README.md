@@ -9,6 +9,7 @@ The example shows how to stream various data types (blocks, transactions, logs, 
 ## Available Streaming Examples
 
 Several examples are implemented:
+
 - `TestStreamBlocks`: Stream block data
 - `TestStreamExport`: Stream transactions with timeout cancellation
 - `TestStreamNames`: Stream name data
@@ -59,7 +60,7 @@ This pattern is useful when you need to process large amounts of data without lo
 
 ## Running the example
 
-```
+```bash
 go build -o out main.go
 ./out
 ```

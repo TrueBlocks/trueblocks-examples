@@ -22,6 +22,7 @@ go run .
 ```
 
 This will produce a markdown table showing:
+
 - Chain name
 - Chain ID
 - Native currency symbol
@@ -30,7 +31,7 @@ This will produce a markdown table showing:
 ## Code Structure
 
 The example code:
+
 1. Imports the TrueBlocks utils package
 2. Calls the `GetChainList()` function to retrieve available chains
 3. Formats and displays the chain information in a markdown table
-```
