@@ -20,19 +20,25 @@ func TestStreamExport() {
 	}
 	opts.Globals.Cache = true // Write to the cache
 
+	runFor := 5 * time.Second
 	go func() {
-		// Sleep for 3 seconds and then cancel the rendering context
-		time.Sleep(3 * time.Second)
+		// Sleep for 30 seconds and then cancel the rendering context
+		time.Sleep(runFor)
 		opts.RenderCtx.Cancel()
 	}()
 
+	startTime := time.Now()
 	go func() {
 		for {
 			select {
 			case model := <-opts.RenderCtx.ModelChan:
 				// We got a transaction. Show it. Note that the cast will always succeed
 				if tx, ok := model.(*types.Transaction); ok {
-					fmt.Printf("%d\t%d\n", tx.BlockNumber, tx.TransactionIndex)
+					elapsedSeconds := time.Since(startTime).Seconds()
+					fmt.Printf("%d\t%d\t%.3fs\n",
+						tx.BlockNumber,
+						tx.TransactionIndex,
+						elapsedSeconds)
 				} else {
 					fmt.Println("Not a transaction")
 				}

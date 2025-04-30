@@ -10,10 +10,10 @@ func main() {
 	namesMap, _ = names.LoadNamesMap("mainnet", types.Custom|types.Prefund|types.Regular, nil)
 
 	// TestStreamAbis()
-	TestStreamBlocks()
+	// TestStreamBlocks()
 	// TestStreamChunks()
 	// TestStreamConfig()
-	// TestStreamExport()
+	TestStreamExport()
 	// TestStreamInit()
 	// TestStreamList()
 	// TestStreamLogs()
