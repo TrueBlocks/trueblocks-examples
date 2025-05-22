@@ -3,7 +3,7 @@ module github.com/TrueBlocks/trueblocks-core/examples/keystore
 go 1.23.1
 
 require (
-	github.com/TrueBlocks/trueblocks-core/src/apps/chifra v0.0.0-20250422130252-4a2fc83a6800
+	github.com/TrueBlocks/trueblocks-core/src/apps/chifra v0.0.0-20250522032357-ac554973976e
 	github.com/ethereum/go-ethereum v1.15.9
 	github.com/joho/godotenv v1.5.1
 )
@@ -11,10 +11,8 @@ require (
 require (
 	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/bits-and-blooms/bitset v1.22.0 // indirect
-	github.com/cespare/cp v1.1.1 // indirect
 	github.com/consensys/bavard v0.1.30 // indirect
 	github.com/consensys/gnark-crypto v0.17.0 // indirect
-	github.com/cpuguy83/go-md2man/v2 v2.0.7 // indirect
 	github.com/crate-crypto/go-ipa v0.0.0-20240724233137-53bbb0ceb27a // indirect
 	github.com/crate-crypto/go-kzg-4844 v1.1.0 // indirect
 	github.com/deckarep/golang-set/v2 v2.8.0 // indirect
@@ -33,20 +31,15 @@ require (
 	github.com/pion/transport/v2 v2.2.10 // indirect
 	github.com/pion/transport/v3 v3.0.7 // indirect
 	github.com/prometheus/client_golang v1.21.1 // indirect
-	github.com/rogpeppe/go-internal v1.13.1 // indirect
 	github.com/shirou/gopsutil v3.21.11+incompatible // indirect
 	github.com/supranational/blst v0.3.14 // indirect
 	github.com/tklauser/go-sysconf v0.3.15 // indirect
 	github.com/tklauser/numcpus v0.10.0 // indirect
-	github.com/urfave/cli/v2 v2.27.6 // indirect
 	github.com/wlynxg/anet v0.0.5 // indirect
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
 	golang.org/x/crypto v0.37.0 // indirect
-	golang.org/x/exp v0.0.0-20250408133849-7e4ce0ab07d0 // indirect
 	golang.org/x/sync v0.13.0 // indirect
 	golang.org/x/sys v0.32.0 // indirect
 	golang.org/x/term v0.31.0 // indirect
-	golang.org/x/time v0.11.0 // indirect
-	google.golang.org/protobuf v1.36.6 // indirect
 	rsc.io/tmplfunc v0.0.3 // indirect
 )
