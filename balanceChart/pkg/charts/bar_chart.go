@@ -2,7 +2,6 @@ package charts
 
 import (
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/base"
@@ -68,7 +67,7 @@ func BarChart(names []types.Name, balances []types.State, labels Labels, fileNam
 	for i := 0; i < nAddrs; i++ {
 		bar, err := plotter.NewBarChart(histories[i], vg.Points(barWidth))
 		if err != nil {
-			log.Panic(err)
+			logger.Panic(err)
 		}
 		bar.Color = colors[i%len(colors)]
 		bar.LineStyle.Color = darkenColor(bar.Color, 0.8)
@@ -101,13 +100,13 @@ func BarChart(names []types.Name, balances []types.State, labels Labels, fileNam
 
 	w, err := os.Create(filename)
 	if err != nil {
-		log.Panic(err)
+		logger.Panic(err)
 	}
 	defer w.Close()
 
 	png := vgimg.PngCanvas{Canvas: img}
 	if _, err := png.WriteTo(w); err != nil {
-		log.Panic(err)
+		logger.Panic(err)
 	}
 
 	utils.System("open " + filename)

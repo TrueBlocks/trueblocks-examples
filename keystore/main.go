@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"log"
 	"os"
 
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/logger"
@@ -31,7 +30,7 @@ import (
 
 func main() {
 	if err := godotenv.Load(".env"); err != nil {
-		log.Fatalf("Error loading .env file: %v", err)
+		logger.Fatalf("Error loading .env file: %v", err)
 	}
 
 	password := os.Getenv("TB_KEYSTORE_PW")
@@ -42,18 +41,18 @@ func main() {
 
 	files, err := os.ReadDir("./keystore")
 	if err != nil || len(files) == 0 {
-		log.Fatal("Keystore not found or empty")
+		logger.Fatal("Keystore not found or empty")
 	}
 
 	filePath := "./keystore/" + files[0].Name()
 	keystoreJSON, err := os.ReadFile(filePath)
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 
 	privateKey, err := keystore.DecryptKey(keystoreJSON, password)
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 
 	fromAddress := privateKey.Address
@@ -61,46 +60,46 @@ func main() {
 
 	client, err := ethclient.Dial(rpcURL)
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 
 	nonce, err := client.PendingNonceAt(context.Background(), fromAddress)
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 
 	baseFee, err := client.SuggestGasPrice(context.Background())
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 
 	// var chainIDHex string
 	// rpcClient, err := rpc.Dial(rpcURL)
 	// if err != nil {
-	// 	log.Fatal(err)
+	// 	logger.Fatal(err)
 	// }
 
 	// err = rpcClient.CallContext(context.Background(), &chainIDHex, "eth_chainId")
 	// if err != nil {
-	// 	log.Fatalf("Failed to fetch chain ID: %v", err)
+	// 	logger.Fatalf("Failed to fetch chain ID: %v", err)
 	// }
 
 	// chainID := new(big.Int)
 	// _, ok := chainID.SetString(chainIDHex[2:], 16) // Remove "0x" and parse as hex
 	// if !ok {
-	// 	log.Fatal("Failed to parse chainID as big.Int")
+	// 	logger.Fatal("Failed to parse chainID as big.Int")
 	// }
 
 	// var gasTipCapHex string
 	// err = rpcClient.CallContext(context.Background(), &gasTipCapHex, "eth_maxPriorityFeePerGas")
 	// if err != nil {
-	// 	log.Fatal(err)
+	// 	logger.Fatal(err)
 	// }
 
 	// gasTipCap := new(big.Int)
 	// _, ok = gasTipCap.SetString(gasTipCapHex[2:], 16) // Remove "0x" and parse as hex
 	// if !ok {
-	// 	log.Fatal("Failed to parse gas tip cap as big.Int")
+	// 	logger.Fatal("Failed to parse gas tip cap as big.Int")
 	// }
 
 	// value := big.NewInt(1000)
@@ -114,7 +113,7 @@ func main() {
 	// 	Data:  nil,
 	// })
 	// if err != nil {
-	// 	log.Fatal("Failed to estimate gas limit: ", err)
+	// 	logger.Fatal("Failed to estimate gas limit: ", err)
 	// }
 
 	// tx := types.NewTx(&types.DynamicFeeTx{
@@ -140,12 +139,12 @@ func main() {
 
 	// signedTx, err := types.SignTx(tx, types.LatestSignerForChainID(chainID), privateKey.PrivateKey)
 	// if err != nil {
-	// 	log.Fatal(err)
+	// 	logger.Fatal(err)
 	// }
 
 	// err = client.SendTransaction(context.Background(), signedTx)
 	// if err != nil {
-	// 	log.Fatal(err)
+	// 	logger.Fatal(err)
 	// }
 
 	// now := time.Now()
@@ -193,7 +192,7 @@ func getOptions() {
 	if _, err := os.Stat(".env"); err == nil {
 		file, err := os.Open(".env")
 		if err != nil {
-			log.Fatalf("Failed to open .env file: %v", err)
+			logger.Fatalf("Failed to open .env file: %v", err)
 		}
 		defer file.Close()
 
@@ -209,10 +208,10 @@ func getOptions() {
 			}
 		}
 		if err := scanner.Err(); err != nil {
-			log.Fatalf("Error reading .env file: %v", err)
+			logger.Fatalf("Error reading .env file: %v", err)
 		}
 	} else {
-		log.Println(".env file not found. This won't work.")
+		logger.Println(".env file not found. This won't work.")
 	}
 
 	flag.BoolVar(&createOption, "create", false, "Create a new keystore")
@@ -253,12 +252,12 @@ func promptPassword(prompt string) string {
 func createKeystore() {
 	privateKey, err := crypto.GenerateKey()
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 
 	if _, err := os.Stat(keystoreDir); os.IsNotExist(err) {
 		if err := os.Mkdir(keystoreDir, 0700); err != nil {
-			log.Fatal(err)
+			logger.Fatal(err)
 		}
 	}
 
@@ -266,7 +265,7 @@ func createKeystore() {
 	ks := keystore.NewKeyStore(keystoreDir, keystore.StandardScryptN, keystore.StandardScryptP)
 	account, err := ks.ImportECDSA(privateKey, password)
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 
 	fmt.Printf("Keystore created for address: %s\n", account.Address.Hex())
@@ -275,7 +274,7 @@ func createKeystore() {
 func showKeystore() {
 	files, err := os.ReadDir(keystoreDir)
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 
 	if len(files) == 0 {
@@ -293,7 +292,7 @@ func showKeystore() {
 	// fmt.Scan(&index)
 
 	if index < 0 || index >= len(files) {
-		log.Fatal("Invalid index")
+		logger.Fatal("Invalid index")
 	}
 
 	filePath := fmt.Sprintf("%s/%s", keystoreDir, files[index].Name())
@@ -302,12 +301,12 @@ func showKeystore() {
 
 	keystoreJSON, err := os.ReadFile(filePath)
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 
 	privateKey, err := keystore.DecryptKey(keystoreJSON, password)
 	if err != nil {
-		log.Fatal("Failed to unlock the keystore: ", err)
+		logger.Fatal("Failed to unlock the keystore: ", err)
 	}
 
 	pk := crypto.FromECDSA(privateKey.PrivateKey)
@@ -326,7 +325,7 @@ func getBalanceAt(address common.Address) *big.Int {
 func sendTransaction() {
 	files, err := os.ReadDir(keystoreDir)
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 
 	if len(files) == 0 {
@@ -344,7 +343,7 @@ func sendTransaction() {
 	// fmt.Scan(&index)
 
 	if index < 0 || index >= len(files) {
-		log.Fatal("Invalid index")
+		logger.Fatal("Invalid index")
 	}
 
 	filePath := fmt.Sprintf("%s/%s", keystoreDir, files[index].Name())
@@ -352,17 +351,17 @@ func sendTransaction() {
 
 	keystoreJSON, err := os.ReadFile(filePath)
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 
 	privateKey, err := keystore.DecryptKey(keystoreJSON, password)
 	if err != nil {
-		log.Fatal("Failed to unlock the keystore: ", err)
+		logger.Fatal("Failed to unlock the keystore: ", err)
 	}
 
 	client, err := ethclient.Dial(os.Getenv("TB_KEYSTORE_RPC"))
 	if err != nil {
-		log.Fatal("Failed to connect to Ethereum node: ", err)
+		logger.Fatal("Failed to connect to Ethereum node: ", err)
 	}
 
 	fromAddress := privateKey.Address
@@ -370,13 +369,13 @@ func sendTransaction() {
 
 	nonce, err := client.PendingNonceAt(context.Background(), fromAddress)
 	if err != nil {
-		log.Fatal("Failed to get nonce: ", err)
+		logger.Fatal("Failed to get nonce: ", err)
 	}
 	// nonce = 0
 
 	gasPrice, err := client.SuggestGasPrice(context.Background())
 	if err != nil {
-		log.Fatal("Failed to get gas price: ", err)
+		logger.Fatal("Failed to get gas price: ", err)
 	}
 	logger.InfoBY("gasPrice:", gasPrice)
 	gasPrice = new(big.Int).Mul(new(big.Int).SetUint64(4), gasPrice)
@@ -409,7 +408,7 @@ func sendTransaction() {
 	// Estimate gas usage
 	gasLimit, err = client.EstimateGas(context.Background(), msg)
 	if err != nil {
-		log.Fatalf("Failed to estimate gas: %v", err)
+		logger.Fatalf("Failed to estimate gas: %v", err)
 	}
 	gasLimit *= 4 // = new(big.Int).Mul(new(big.Int).SetUint64(2), gasLimit)
 	fmt.Printf("Estimated Gas Limit: %d\n", gasLimit)
@@ -418,12 +417,12 @@ func sendTransaction() {
 
 	chainID, err := client.NetworkID(context.Background())
 	if err != nil {
-		log.Fatal("Failed to get network ID: ", err)
+		logger.Fatal("Failed to get network ID: ", err)
 	}
 
 	signedTx, err := types.SignTx(tx, types.NewEIP155Signer(chainID), privateKey.PrivateKey)
 	if err != nil {
-		log.Fatal("Failed to sign transaction: ", err)
+		logger.Fatal("Failed to sign transaction: ", err)
 	}
 
 	0.00071222
@@ -487,12 +486,12 @@ func sendTransaction() {
 
 		err = client.SendTransaction(context.Background(), signedTx)
 		if err != nil {
-			log.Fatal("Failed to send transaction: ", err)
+			logger.Fatal("Failed to send transaction: ", err)
 		}
 
 		receipt, err := WaitForTransactionReceipt(client, signedTx.Hash())
 		if err != nil {
-			log.Fatal("Failed to get transaction receipt: ", err)
+			logger.Fatal("Failed to get transaction receipt: ", err)
 		}
 		logger.InfoBB("Transaction receipt:", receipt)
 	}
@@ -520,7 +519,7 @@ func WaitForTransactionReceipt(client *ethclient.Client, txHash common.Hash) (*t
 
 		_, isPending, err2 := client.TransactionByHash(context.Background(), txHash)
 		if err2 != ethereum.NotFound {
-			log.Fatalf("Error fetching transaction: %v", err)
+			logger.Fatalf("Error fetching transaction: %v", err)
 		}
 		if isPending {
 			logger.InfoBR("Transaction is pending...")

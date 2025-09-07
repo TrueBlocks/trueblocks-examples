@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/logger"
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/output"
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/types"
 	sdk "github.com/TrueBlocks/trueblocks-sdk/v5"
@@ -28,10 +29,10 @@ func TestStreamProgress() {
 				if _, ok := block.(*types.LightBlock); ok {
 					bar.Add(1)
 				} else {
-					panic("This should never happen")
+					logger.Panic("This should never happen")
 				}
 			case err := <-opts.RenderCtx.ErrorChan:
-				panic(err)
+				logger.Panic(err)
 			}
 		}
 	}()
@@ -39,7 +40,7 @@ func TestStreamProgress() {
 	// This will stream the blocks. Note that they are LightBlocks
 	// which is what BlocksHashes returns.
 	if _, _, err := opts.BlocksHashes(); err != nil {
-		panic(err)
+		logger.Panic(err)
 	}
 	bar.Finish()
 }

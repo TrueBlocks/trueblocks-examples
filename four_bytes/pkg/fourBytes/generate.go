@@ -12,6 +12,7 @@ import (
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/base"
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/config"
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/file"
+	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/logger"
 	"github.com/ethereum/go-ethereum/crypto"
 	ants "github.com/panjf2000/ants/v2"
 )
@@ -81,12 +82,12 @@ func writeWorker(i interface{}) {
 	args := i.(*writePoolArgs)
 	out, err := os.OpenFile(filepath.Join(args.outDir, args.key), os.O_RDWR|os.O_CREATE, 0666)
 	if err != nil {
-		panic(err)
+		logger.Panic(err)
 	}
 	defer out.Close()
 
 	if err = write(out, args.value.sigRecords, args.value.strRecords); err != nil {
-		panic(err)
+		logger.Panic(err)
 	}
 }
 

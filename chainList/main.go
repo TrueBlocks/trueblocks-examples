@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"log"
 
+	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/logger"
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/utils"
 )
 
@@ -11,7 +11,7 @@ func main() {
 	// Get the chain list
 	chainList, err := utils.UpdateChainList("./data")
 	if err != nil {
-		log.Fatalf("Error getting chain list: %v", err)
+		logger.Fatalf("Error getting chain list: %v", err)
 	}
 
 	// Print markdown table header
