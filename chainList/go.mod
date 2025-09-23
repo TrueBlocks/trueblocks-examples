@@ -5,12 +5,12 @@ go 1.25.1
 
 replace github.com/TrueBlocks/trueblocks-core/src/apps/chifra => ../../src/apps/chifra
 
-require github.com/TrueBlocks/trueblocks-core/src/apps/chifra v0.0.0-20250609000835-e567c05604cb
+require github.com/TrueBlocks/trueblocks-core/src/apps/chifra v0.0.0-20250923030321-c450c61709e2
 
 require (
 	github.com/bykof/gostradamus v1.1.2 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
-	github.com/ethereum/go-ethereum v1.15.9 // indirect
+	github.com/ethereum/go-ethereum v1.15.10 // indirect
 	github.com/holiman/uint256 v1.3.2 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/panjf2000/ants/v2 v2.11.3 // indirect

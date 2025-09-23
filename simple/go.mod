@@ -7,7 +7,7 @@ require github.com/TrueBlocks/trueblocks-sdk/v5 v5.3.0
 
 require (
 	github.com/Microsoft/go-winio v0.6.2 // indirect
-	github.com/TrueBlocks/trueblocks-core/src/apps/chifra v0.0.0-20250609000835-e567c05604cb // indirect
+	github.com/TrueBlocks/trueblocks-core/src/apps/chifra v0.0.0-20250923030321-c450c61709e2 // indirect
 	github.com/alecthomas/participle/v2 v2.1.4 // indirect
 	github.com/benbjohnson/clock v1.3.5 // indirect
 	github.com/bits-and-blooms/bitset v1.22.0 // indirect
@@ -22,7 +22,7 @@ require (
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.4.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/ethereum/c-kzg-4844 v1.0.3 // indirect
-	github.com/ethereum/go-ethereum v1.15.9 // indirect
+	github.com/ethereum/go-ethereum v1.15.10 // indirect
 	github.com/ethereum/go-verkle v0.2.2 // indirect
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
 	github.com/go-ole/go-ole v1.3.0 // indirect
@@ -32,13 +32,14 @@ require (
 	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/holiman/uint256 v1.3.2 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
-	github.com/ipfs/boxo v0.29.1 // indirect
+	github.com/ipfs/boxo v0.30.0 // indirect
 	github.com/ipfs/go-cid v0.5.0 // indirect
 	github.com/ipfs/go-ipfs-api v0.7.0 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.10 // indirect
 	github.com/libp2p/go-buffer-pool v0.1.0 // indirect
 	github.com/libp2p/go-flow-metrics v0.2.0 // indirect
 	github.com/libp2p/go-libp2p v0.41.1 // indirect
+	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/minio/sha256-simd v1.0.1 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mmcloughlin/addchain v0.4.0 // indirect
