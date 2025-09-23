@@ -4,7 +4,7 @@ module github.com/TrueBlocks/trueblocks-core/src/other/four_bytes
 go 1.25.1
 
 require (
-	github.com/TrueBlocks/trueblocks-core/src/apps/chifra v0.0.0-20250923030321-c450c61709e2
+	github.com/TrueBlocks/trueblocks-core/src/apps/chifra v0.0.0-20250923033958-180bbc7ebdbd
 	github.com/ethereum/go-ethereum v1.15.10
 	github.com/panjf2000/ants/v2 v2.11.3
 	github.com/spf13/cobra v1.9.1
