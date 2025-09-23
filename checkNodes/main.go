@@ -68,7 +68,7 @@ func main() {
 	w.Flush()
 	text := buffer.String()
 	for _, chain := range chains {
-		text = strings.Replace(text, chain, colors.Cyan+chain+colors.Green, -1)
+		text = strings.ReplaceAll(text, chain, colors.Cyan+chain+colors.Green)
 	}
 	fmt.Print(text)
 	fmt.Println(colors.Off)
