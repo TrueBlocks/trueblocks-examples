@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/base"
-	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/file"
 	sdk "github.com/TrueBlocks/trueblocks-sdk/v5"
 )
 
@@ -62,11 +61,6 @@ func oneTest(numWorkers int) {
 	go func() {
 		for i := first; i >= last; i-- {
 			blknumChan <- base.Blknum(i)
-			if i%10 == 0 {
-				file.StringToAsciiFile(
-					"/Users/jrush/Development/trueblocks-core/build/shit",
-					fmt.Sprintf("Workers: %d, Bn: %d, Cnt: %d", numWorkers, i, minBlockNumber))
-			}
 		}
 		close(blknumChan)
 	}()
