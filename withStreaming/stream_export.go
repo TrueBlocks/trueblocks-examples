@@ -9,7 +9,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"time"
 
@@ -39,49 +38,22 @@ func TestStreamExport_Internal[T exportType](mode ...string) {
 	opts.Globals.Cache = true
 
 	// Set up timeout and cancel the context when it hits.
-	runFor := 40 * time.Second
+	runFor := 1 * time.Second
 	go func() {
 		time.Sleep(runFor)
 		opts.RenderCtx.Cancel()
 	}()
 
 	// Process the streaming data
-	fmt.Println("[")
-	cnt := 0
+	startTime := time.Now()
 	go func() {
 		for {
 			select {
 			case model := <-opts.RenderCtx.ModelChan:
-				extraOpts := map[string]any{
-					"export":    true,
-					"loadNames": true,
-					"ether":     true,
-					"namesMap":  nil,
-				}
-				if stmt, ok := model.(*types.Statement); ok {
-					p := types.NewModelProps("mainnet", "json", true, extraOpts)
-					rawNames := []types.Labeler{
-						types.NewLabeler(stmt.Asset, "asset"),
-						types.NewLabeler(stmt.AccountedFor, "accountedFor"),
-						types.NewLabeler(stmt.Sender, "sender"),
-						types.NewLabeler(stmt.Recipient, "recipient"),
-					}
-					result := stmt.RawMap(p, &rawNames)
-					calc := stmt.CalcMap(p)
-					for k, v := range calc {
-						result[k] = v
-					}
-					b, err := json.Marshal(result)
-					if err != nil {
-						logger.Info("Failed to marshal model to JSON:", err)
-					} else {
-						if cnt > 0 {
-							fmt.Println(",")
-						}
-						cnt++
-						fmt.Println(string(b))
-					}
-				}
+				// Type assertion based on expected return type
+				elapsedSeconds := time.Since(startTime).Seconds()
+				value := model.Model("mainnet", "csv", false, nil)
+				logger.Info(fmt.Sprintf("%.3fs: received item of type: %s", elapsedSeconds, value))
 			case err := <-opts.RenderCtx.ErrorChan:
 				logger.Info("Error returned by fetchData:", err)
 			}
@@ -101,8 +73,6 @@ func TestStreamExport_Internal[T exportType](mode ...string) {
 		logger.Info(err.Error())
 	}
 	logger.Info("Leaving TestStreamExport_Internal")
-	fmt.Println("]")
-	fmt.Println()
 }
 
 type exportType interface {
