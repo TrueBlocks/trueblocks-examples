@@ -66,9 +66,8 @@ func TestStreamExport_Internal[T exportType](mode ...string) {
 						types.NewLabeler(stmt.Sender, "sender"),
 						types.NewLabeler(stmt.Recipient, "recipient"),
 					}
-					calcNames := []types.Labeler{}
-					result := stmt.RawMap(&p, rawNames)
-					calc := stmt.CalcMap(&p, calcNames)
+					result := stmt.RawMap(p, &rawNames)
+					calc := stmt.CalcMap(p)
 					for k, v := range calc {
 						result[k] = v
 					}
