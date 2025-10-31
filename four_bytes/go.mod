@@ -1,4 +1,4 @@
-module github.com/TrueBlocks/trueblocks-core/src/other/four_bytes
+module github.com/TrueBlocks/trueblocks-core/examples/four_bytes
 
 // Go Version
 go 1.25.1
