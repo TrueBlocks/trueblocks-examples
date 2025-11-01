@@ -1,10 +1,10 @@
-module github.com/TrueBlocks/trueblocks-core/examples/withStreaming/v5
+module github.com/TrueBlocks/trueblocks-core/examples/withStreaming/v6
 
 // Go Version
 go 1.25.1
 
 require (
-	github.com/TrueBlocks/trueblocks-sdk/v5 v5.9.3
+	github.com/TrueBlocks/trueblocks-sdk/v6 v5.9.3
 	github.com/schollz/progressbar/v3 v3.14.4
 )
 

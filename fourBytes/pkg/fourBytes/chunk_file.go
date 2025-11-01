@@ -1,4 +1,4 @@
-package fourbytes
+package fourBytes
 
 import (
 	"encoding/binary"

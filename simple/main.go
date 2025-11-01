@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	sdk "github.com/TrueBlocks/trueblocks-sdk/v5"
+	sdk "github.com/TrueBlocks/trueblocks-sdk/v6"
 )
 
 // main is a purposefully simple example that uses the TrueBlocks SDK. It retrieves blocks

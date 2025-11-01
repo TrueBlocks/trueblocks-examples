@@ -7,7 +7,7 @@ import (
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/v5/pkg/logger"
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/v5/pkg/output"
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/v5/pkg/types"
-	sdk "github.com/TrueBlocks/trueblocks-sdk/v5"
+	sdk "github.com/TrueBlocks/trueblocks-sdk/v6"
 	"github.com/schollz/progressbar/v3"
 )
 

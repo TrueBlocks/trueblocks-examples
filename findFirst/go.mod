@@ -1,9 +1,9 @@
-module github.com/TrueBlocks/trueblocks-core/examples/findFirst/v5
+module github.com/TrueBlocks/trueblocks-core/examples/findFirst/v6
 
 // Go Version
 go 1.25.1
 
-require github.com/TrueBlocks/trueblocks-sdk/v5 v5.9.3
+require github.com/TrueBlocks/trueblocks-sdk/v6 v5.9.3
 
 replace github.com/TrueBlocks/trueblocks-core/src/apps/chifra => ../../src/apps/chifra
 
