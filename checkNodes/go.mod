@@ -3,7 +3,7 @@ module github.com/TrueBlocks/trueblocks-core/examples/checkNodes/v6
 // Go Version
 go 1.25.1
 
-require github.com/TrueBlocks/trueblocks-sdk/v6 v5.9.3
+require github.com/TrueBlocks/trueblocks-sdk/v6 v6.0.3
 
 replace github.com/TrueBlocks/trueblocks-core/src/apps/chifra => ../../src/apps/chifra
 

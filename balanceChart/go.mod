@@ -4,7 +4,7 @@ module github.com/TrueBlocks/trueblocks-core/examples/balanceChart/v6
 go 1.25.1
 
 require (
-	github.com/TrueBlocks/trueblocks-sdk/v6 v5.9.3
+	github.com/TrueBlocks/trueblocks-sdk/v6 v6.0.3
 	github.com/bykof/gostradamus v1.1.2
 	gonum.org/v1/plot v0.15.2
 )
