@@ -5,7 +5,7 @@ go 1.25.1
 
 replace github.com/TrueBlocks/trueblocks-core/src/apps/chifra => ../../src/apps/chifra
 
-require github.com/TrueBlocks/trueblocks-core/src/apps/chifra/v6 v6.0.0-20251101171820-26ef25a50713
+require github.com/TrueBlocks/trueblocks-core/src/apps/chifra/v6 v6.0.0-20251101173714-c1fe7b7f4f9b
 
 require (
 	github.com/bykof/gostradamus v1.1.2 // indirect
