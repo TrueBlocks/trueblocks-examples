@@ -1,4 +1,4 @@
-module github.com/TrueBlocks/trueblocks-core/examples/chainList
+module github.com/TrueBlocks/trueblocks-core/examples/chainList/v5
 
 // Go Version
 go 1.25.1

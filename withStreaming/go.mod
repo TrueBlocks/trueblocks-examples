@@ -1,4 +1,4 @@
-module github.com/TrueBlocks/trueblocks-core/examples/withStreaming
+module github.com/TrueBlocks/trueblocks-core/examples/withStreaming/v5
 
 // Go Version
 go 1.25.1

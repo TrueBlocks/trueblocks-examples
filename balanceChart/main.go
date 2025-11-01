@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 
-	"github.com/TrueBlocks/trueblocks-core/examples/balanceChart/pkg/charts"
-	"github.com/TrueBlocks/trueblocks-core/examples/balanceChart/pkg/dates"
+	"github.com/TrueBlocks/trueblocks-core/examples/balanceChart/v5/pkg/charts"
+	"github.com/TrueBlocks/trueblocks-core/examples/balanceChart/v5/pkg/dates"
 	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/logger"
 )
 

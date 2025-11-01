@@ -1,4 +1,4 @@
-module github.com/TrueBlocks/trueblocks-core/examples/cancelContext
+module github.com/TrueBlocks/trueblocks-core/examples/cancelContext/v5
 
 // Go Version
 go 1.25.1
