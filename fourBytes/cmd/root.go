@@ -6,7 +6,7 @@ import (
 	"os"
 	"runtime"
 
-	"github.com/TrueBlocks/trueblocks-core/examples/fourBytes/v5/pkg/fourBytes"
+	"github.com/TrueBlocks/trueblocks-core/examples/fourBytes/v5/pkg/fourbytes"
 	"github.com/spf13/cobra"
 )
 
@@ -22,7 +22,7 @@ var rootCmd = &cobra.Command{
 			return errors.New("outdir is required")
 		}
 		fmt.Printf("Generating database (with %d goroutines each step)\n", runtime.GOMAXPROCS(0))
-		return fourBytes.GenerateFromFiles(outDir)
+		return fourbytes.GenerateFromFiles(outDir)
 	},
 }
 
