@@ -6,8 +6,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/v5/pkg/logger"
-	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/v5/pkg/names"
+	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/v6/pkg/logger"
+	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/v6/pkg/names"
 )
 
 // App is the main structure carrying the command line options, loggers, and application state

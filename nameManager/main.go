@@ -5,13 +5,13 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/v5/pkg/config"
-	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/v5/pkg/crud"
-	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/v5/pkg/file"
-	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/v5/pkg/logger"
-	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/v5/pkg/names"
-	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/v5/pkg/types"
-	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/v5/pkg/usage"
+	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/v6/pkg/config"
+	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/v6/pkg/crud"
+	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/v6/pkg/file"
+	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/v6/pkg/logger"
+	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/v6/pkg/names"
+	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/v6/pkg/types"
+	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/v6/pkg/usage"
 	sdk "github.com/TrueBlocks/trueblocks-sdk/v6"
 )
 

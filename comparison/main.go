@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/v5/pkg/types"
+	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/v6/pkg/types"
 	sdk "github.com/TrueBlocks/trueblocks-sdk/v6"
 )
 
