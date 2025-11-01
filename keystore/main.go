@@ -4,7 +4,7 @@ import (
 	"context"
 	"os"
 
-	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/logger"
+	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/v5/pkg/logger"
 	"github.com/ethereum/go-ethereum/accounts/keystore"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -17,8 +17,8 @@ import (
 	   "os"
 	   "time"
 
-	   "github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/file"
-	   "github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/logger"
+	   "github.com/TrueBlocks/trueblocks-core/src/apps/chifra/v5/pkg/file"
+	   "github.com/TrueBlocks/trueblocks-core/src/apps/chifra/v5/pkg/logger"
 	   "github.com/ethereum/go-ethereum"
 	   "github.com/ethereum/go-ethereum/accounts/keystore"
 	   "github.com/ethereum/go-ethereum/common"
@@ -169,8 +169,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/base"
-	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/logger"
+	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/v5/pkg/base"
+	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/v5/pkg/logger"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/keystore"
 	"github.com/ethereum/go-ethereum/common"

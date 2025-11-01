@@ -5,7 +5,7 @@ import (
 
 	"github.com/TrueBlocks/trueblocks-core/examples/balanceChart/v5/pkg/charts"
 	"github.com/TrueBlocks/trueblocks-core/examples/balanceChart/v5/pkg/dates"
-	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/pkg/logger"
+	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/v5/pkg/logger"
 )
 
 // main retrieves a list of prefund addresses with balances at the start of
