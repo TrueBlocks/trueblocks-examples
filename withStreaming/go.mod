@@ -4,7 +4,7 @@ module github.com/TrueBlocks/trueblocks-core/examples/withStreaming/v6
 go 1.25.1
 
 require (
-	github.com/TrueBlocks/trueblocks-core/src/apps/chifra/v6 v6.0.0-20251101173714-c1fe7b7f4f9b
+	github.com/TrueBlocks/trueblocks-core/src/apps/chifra/v6 v6.0.0-20251101182102-54ab897a3998
 	github.com/TrueBlocks/trueblocks-sdk/v6 v6.1.0
 	github.com/schollz/progressbar/v3 v3.14.4
 )

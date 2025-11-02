@@ -9,7 +9,7 @@ replace github.com/TrueBlocks/trueblocks-core/src/apps/chifra => ../../src/apps/
 
 require (
 	github.com/Microsoft/go-winio v0.6.2 // indirect
-	github.com/TrueBlocks/trueblocks-core/src/apps/chifra/v6 v6.0.0-20251101173714-c1fe7b7f4f9b // indirect
+	github.com/TrueBlocks/trueblocks-core/src/apps/chifra/v6 v6.0.0-20251101182102-54ab897a3998 // indirect
 	github.com/alecthomas/participle/v2 v2.1.4 // indirect
 	github.com/benbjohnson/clock v1.3.5 // indirect
 	github.com/bits-and-blooms/bitset v1.22.0 // indirect
