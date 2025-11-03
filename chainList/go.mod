@@ -3,9 +3,7 @@ module github.com/TrueBlocks/trueblocks-examples/chainList/v6
 // Go Version
 go 1.25.1
 
-replace github.com/TrueBlocks/trueblocks-chifra => ../../chifra
-
-require github.com/TrueBlocks/trueblocks-chifra/v6 v6.0.0-20251101182102-54ab897a3998
+require github.com/TrueBlocks/trueblocks-chifra/v6 v6.4.5
 
 require (
 	github.com/bykof/gostradamus v1.1.2 // indirect

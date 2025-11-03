@@ -4,11 +4,9 @@ module github.com/TrueBlocks/trueblocks-examples/checkNodes/v6
 go 1.25.1
 
 require (
-	github.com/TrueBlocks/trueblocks-chifra/v6 v6.0.0-20251101182102-54ab897a3998
-	github.com/TrueBlocks/trueblocks-sdk/v6 v6.1.0
+	github.com/TrueBlocks/trueblocks-chifra/v6 v6.4.5
+	github.com/TrueBlocks/trueblocks-sdk/v6 v6.4.1
 )
-
-replace github.com/TrueBlocks/trueblocks-chifra => ../../chifra
 
 require (
 	github.com/Microsoft/go-winio v0.6.2 // indirect

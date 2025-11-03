@@ -4,13 +4,11 @@ module github.com/TrueBlocks/trueblocks-examples/fourBytes/v6
 go 1.25.1
 
 require (
-	github.com/TrueBlocks/trueblocks-chifra/v6 v6.0.0-20251101182102-54ab897a3998
-	github.com/ethereum/go-ethereum v1.15.10
+	github.com/TrueBlocks/trueblocks-chifra/v6 v6.4.5
+	github.com/ethereum/go-ethereum v1.16.5
 	github.com/panjf2000/ants/v2 v2.11.3
-	github.com/spf13/cobra v1.9.1
+	github.com/spf13/cobra v1.10.1
 )
-
-replace github.com/TrueBlocks/trueblocks-chifra => ../../chifra
 
 require (
 	github.com/benbjohnson/clock v1.3.5 // indirect
@@ -41,11 +39,11 @@ require (
 	github.com/multiformats/go-varint v0.0.7 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.4 // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
-	github.com/spf13/pflag v1.0.6 // indirect
+	github.com/spf13/pflag v1.0.9 // indirect
 	golang.org/x/crypto v0.37.0 // indirect
 	golang.org/x/exp v0.0.0-20250408133849-7e4ce0ab07d0 // indirect
 	golang.org/x/sync v0.13.0 // indirect
-	golang.org/x/sys v0.32.0 // indirect
+	golang.org/x/sys v0.36.0 // indirect
 	golang.org/x/term v0.31.0 // indirect
 	google.golang.org/protobuf v1.36.6 // indirect
 	lukechampine.com/blake3 v1.4.1 // indirect
