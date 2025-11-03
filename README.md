@@ -50,7 +50,7 @@ When creating examples to test new features on a local branch:
 2. **Add local replace directives** to the generated `go.mod`:
    ```go
    replace github.com/TrueBlocks/trueblocks-sdk/v6 => ../sdk
-   replace github.com/TrueBlocks/trueblocks-core/src/apps/chifra => ../src/apps/chifra
+   replace github.com/TrueBlocks/trueblocks-chifra/v6 => ../chifra
    ```
 
 3. **Add to .gitignore** to prevent breaking CI:

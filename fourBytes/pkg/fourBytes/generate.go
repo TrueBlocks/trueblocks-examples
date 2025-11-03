@@ -9,10 +9,10 @@ import (
 	"runtime"
 	"sync"
 
-	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/v6/pkg/base"
-	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/v6/pkg/config"
-	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/v6/pkg/file"
-	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/v6/pkg/logger"
+	"github.com/TrueBlocks/trueblocks-chifra/v6/pkg/base"
+	"github.com/TrueBlocks/trueblocks-chifra/v6/pkg/config"
+	"github.com/TrueBlocks/trueblocks-chifra/v6/pkg/file"
+	"github.com/TrueBlocks/trueblocks-chifra/v6/pkg/logger"
 	"github.com/ethereum/go-ethereum/crypto"
 	ants "github.com/panjf2000/ants/v2"
 )

@@ -6,7 +6,7 @@ import (
 	"os"
 	"runtime"
 
-	"github.com/TrueBlocks/trueblocks-core/examples/fourBytes/v6/pkg/fourBytes"
+	"github.com/TrueBlocks/trueblocks-examples/fourBytes/v6/pkg/fourBytes"
 	"github.com/spf13/cobra"
 )
 

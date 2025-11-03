@@ -10,12 +10,12 @@ import (
 	"text/tabwriter"
 	"time"
 
-	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/v6/pkg/base"
-	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/v6/pkg/colors"
-	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/v6/pkg/file"
-	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/v6/pkg/logger"
-	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/v6/pkg/tslib"
-	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/v6/pkg/types"
+	"github.com/TrueBlocks/trueblocks-chifra/v6/pkg/base"
+	"github.com/TrueBlocks/trueblocks-chifra/v6/pkg/colors"
+	"github.com/TrueBlocks/trueblocks-chifra/v6/pkg/file"
+	"github.com/TrueBlocks/trueblocks-chifra/v6/pkg/logger"
+	"github.com/TrueBlocks/trueblocks-chifra/v6/pkg/tslib"
+	"github.com/TrueBlocks/trueblocks-chifra/v6/pkg/types"
 	sdk "github.com/TrueBlocks/trueblocks-sdk/v6"
 )
 

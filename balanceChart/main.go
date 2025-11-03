@@ -3,9 +3,9 @@ package main
 import (
 	"fmt"
 
-	"github.com/TrueBlocks/trueblocks-core/examples/balanceChart/v6/pkg/charts"
-	"github.com/TrueBlocks/trueblocks-core/examples/balanceChart/v6/pkg/dates"
-	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/v6/pkg/logger"
+	"github.com/TrueBlocks/trueblocks-chifra/v6/pkg/logger"
+	"github.com/TrueBlocks/trueblocks-examples/balanceChart/v6/pkg/charts"
+	"github.com/TrueBlocks/trueblocks-examples/balanceChart/v6/pkg/dates"
 )
 
 // main retrieves a list of prefund addresses with balances at the start of

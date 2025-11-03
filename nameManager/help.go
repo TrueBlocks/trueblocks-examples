@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/v6/pkg/colors"
+	"github.com/TrueBlocks/trueblocks-chifra/v6/pkg/colors"
 )
 
 func printHelp(err error) {

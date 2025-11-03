@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/v6/pkg/logger"
-	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/v6/pkg/output"
-	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/v6/pkg/types"
+	"github.com/TrueBlocks/trueblocks-chifra/v6/pkg/logger"
+	"github.com/TrueBlocks/trueblocks-chifra/v6/pkg/output"
+	"github.com/TrueBlocks/trueblocks-chifra/v6/pkg/types"
 	sdk "github.com/TrueBlocks/trueblocks-sdk/v6"
 	"github.com/schollz/progressbar/v3"
 )

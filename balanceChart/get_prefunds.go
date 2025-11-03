@@ -3,8 +3,8 @@ package main
 import (
 	"sort"
 
-	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/v6/pkg/base"
-	"github.com/TrueBlocks/trueblocks-core/src/apps/chifra/v6/pkg/types"
+	"github.com/TrueBlocks/trueblocks-chifra/v6/pkg/base"
+	"github.com/TrueBlocks/trueblocks-chifra/v6/pkg/types"
 	sdk "github.com/TrueBlocks/trueblocks-sdk/v6"
 )
 

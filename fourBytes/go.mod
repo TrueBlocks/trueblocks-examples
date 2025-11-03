@@ -1,16 +1,16 @@
-module github.com/TrueBlocks/trueblocks-core/examples/fourBytes/v6
+module github.com/TrueBlocks/trueblocks-examples/fourBytes/v6
 
 // Go Version
 go 1.25.1
 
 require (
-	github.com/TrueBlocks/trueblocks-core/src/apps/chifra/v6 v6.0.0-20251101182102-54ab897a3998
+	github.com/TrueBlocks/trueblocks-chifra/v6 v6.0.0-20251101182102-54ab897a3998
 	github.com/ethereum/go-ethereum v1.15.10
 	github.com/panjf2000/ants/v2 v2.11.3
 	github.com/spf13/cobra v1.9.1
 )
 
-replace github.com/TrueBlocks/trueblocks-core/src/apps/chifra => ../../src/apps/chifra
+replace github.com/TrueBlocks/trueblocks-chifra => ../../chifra
 
 require (
 	github.com/benbjohnson/clock v1.3.5 // indirect
