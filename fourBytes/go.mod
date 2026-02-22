@@ -4,7 +4,7 @@ module github.com/TrueBlocks/trueblocks-examples/fourBytes/v6
 go 1.25.1
 
 require (
-	github.com/TrueBlocks/trueblocks-chifra/v6 v6.6.5
+	github.com/TrueBlocks/trueblocks-chifra/v6 v6.7.0
 	github.com/ethereum/go-ethereum v1.16.6
 	github.com/panjf2000/ants/v2 v2.11.3
 	github.com/spf13/cobra v1.10.1

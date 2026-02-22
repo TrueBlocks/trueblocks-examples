@@ -4,7 +4,7 @@ module github.com/TrueBlocks/trueblocks-examples/keystore/v6
 go 1.25.1
 
 require (
-	github.com/TrueBlocks/trueblocks-chifra/v6 v6.6.5
+	github.com/TrueBlocks/trueblocks-chifra/v6 v6.7.0
 	github.com/ethereum/go-ethereum v1.16.6
 	github.com/joho/godotenv v1.5.1
 )

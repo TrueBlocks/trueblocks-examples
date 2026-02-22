@@ -4,8 +4,8 @@ module github.com/TrueBlocks/trueblocks-examples/balanceChart/v6
 go 1.25.1
 
 require (
-	github.com/TrueBlocks/trueblocks-chifra/v6 v6.6.5
-	github.com/TrueBlocks/trueblocks-sdk/v6 v6.4.5
+	github.com/TrueBlocks/trueblocks-chifra/v6 v6.7.0
+	github.com/TrueBlocks/trueblocks-sdk/v6 v6.7.0
 	github.com/bykof/gostradamus v1.1.2
 	gonum.org/v1/plot v0.16.0
 )
@@ -24,7 +24,6 @@ require (
 	github.com/blang/semver/v4 v4.0.0 // indirect
 	github.com/campoy/embedmd v1.0.0 // indirect
 	github.com/consensys/gnark-crypto v0.18.1 // indirect
-	github.com/cpuguy83/go-md2man/v2 v2.0.7 // indirect
 	github.com/crackcomm/go-gitignore v0.0.0-20241020182519-7843d2ba8fdf // indirect
 	github.com/crate-crypto/go-eth-kzg v1.4.0 // indirect
 	github.com/crate-crypto/go-ipa v0.0.0-20240724233137-53bbb0ceb27a // indirect
