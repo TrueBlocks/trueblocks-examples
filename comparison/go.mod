@@ -4,7 +4,7 @@ module github.com/TrueBlocks/trueblocks-examples/comparison/v6
 go 1.25.1
 
 require (
-	github.com/TrueBlocks/trueblocks-chifra/v6 v6.4.5
+	github.com/TrueBlocks/trueblocks-chifra/v6 v6.6.5
 	github.com/TrueBlocks/trueblocks-sdk/v6 v6.4.5
 )
 
@@ -17,6 +17,7 @@ require (
 	github.com/blang/semver/v4 v4.0.0 // indirect
 	github.com/bykof/gostradamus v1.1.2 // indirect
 	github.com/consensys/gnark-crypto v0.18.1 // indirect
+	github.com/cpuguy83/go-md2man/v2 v2.0.7 // indirect
 	github.com/crackcomm/go-gitignore v0.0.0-20241020182519-7843d2ba8fdf // indirect
 	github.com/crate-crypto/go-eth-kzg v1.4.0 // indirect
 	github.com/crate-crypto/go-ipa v0.0.0-20240724233137-53bbb0ceb27a // indirect
@@ -59,11 +60,9 @@ require (
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	github.com/spf13/cobra v1.10.1 // indirect
 	github.com/spf13/pflag v1.0.9 // indirect
-	github.com/stretchr/testify v1.11.1 // indirect
 	github.com/supranational/blst v0.3.16-0.20250831170142-f48500c1fdbe // indirect
 	github.com/tklauser/go-sysconf v0.3.15 // indirect
 	github.com/tklauser/numcpus v0.10.0 // indirect
-	github.com/urfave/cli/v2 v2.27.7 // indirect
 	github.com/wealdtech/go-ens/v3 v3.6.0 // indirect
 	github.com/wealdtech/go-multicodec v1.4.0 // indirect
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
